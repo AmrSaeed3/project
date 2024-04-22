@@ -19,7 +19,6 @@ router.route("/login").post(validationSchema2(), usersController.login);
 
 router.route("/login2").post(validationSchema2(), usersController.login2);
 
-router.route("/anyone").get(usersController.anyone);
 
 router.route("/auth/google").get(usersController.authGoogle);
 
@@ -64,7 +63,6 @@ router.route("/failure").get(usersController.failure);
 
 router.route("/logout").get(usersController.logout);
 
-router.route("/3").get(usersController.homePage);
 
 router.route("/logout2").get(usersController.logout2);
 
@@ -73,9 +71,7 @@ router.get("/2", (req, res) => {
   res.send("Home Page");
 });
 //
-router.get("/home", usersController.homePage);
-router.get("/privacy-policy", usersController.privacyPolicy);
-router.get("/terms-of-service", usersController.termsOfService);
+
 // تحقق من ما إذا كان المستخدم قد قام بتسجيل الدخول
 // function isAuthenticated(req, res, next) {
 //   if (req.isAuthenticated()) {
@@ -83,13 +79,5 @@ router.get("/terms-of-service", usersController.termsOfService);
 //   }
 //   res.redirect("/");
 // }
-router
-  .route("/addphoto")
-  .post(uploadImage.single("avatar"), usersController.addphoto);
-router.route("/getAllData").get(usersController.getAllData);
-router
-  .route("/allData/:title")
-  .get(usersController.getOneData)
-  .patch(usersController.updateData)
-  .delete(usersController.deleteData);
+
 module.exports = router;

@@ -262,15 +262,6 @@ const failure = (req, res, next) => {
   return next(error);
 };
 
-// const handleValidationErrors = (req, res, next) => {
-//   const errors = validationResult(req);
-//   if (!errors.isEmpty()) {
-//     const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
-//     return next(error);
-//   }
-//   next();
-// };
-
 const logout = async (req, res) => {
   if (req.isAuthenticated()) {
     const { email } = req.user;
@@ -298,46 +289,12 @@ const logout = async (req, res) => {
   // إذا لم يكن المستخدم قد قام بتسجيل الدخول، قم بتوجيهه إلى الصفحة الرئيسية أو أي مكان آخر
   res.redirect("/");
 };
-const homePage = (req, res) => {
-  res.send(
-    req.isAuthenticated()
-      ? `Hello, ${req.user.displayName}! <a href="/logout">Logout</a>`
-      : 'Welcome! <a href="/auth/google">Login with Google</a>'
-  );
-};
+
 const authGoogle = (req, res) => {
   passport.authenticate("google", {
     scope: ["profile", "email"],
   })(req, res);
 };
-
-const anyone = asyncWrapper(async (req, res, next) => {
-  const user = await UserAnyone.findOne({ mac: mac });
-  if (user) {
-    const error = appError.create(
-      "Oops , you can use SKIP FOR NOW just only once",
-      500,
-      httpStatus.ERROR
-    );
-    return next(error);
-  }
-  const token = await generateJwt.generatequicly({
-    mac: mac,
-  });
-  const newUser = new UserAnyone({
-    mac: mac,
-  });
-  await newUser.save();
-  res.status(200).json({
-    status: httpStatus.SUCCESS,
-    data: newUser,
-    token: token.token,
-    expireData: token.expireIn,
-  });
-  // setTimeout(() => {
-  //   res.redirect('/success')
-  // }, token.expireData);
-});
 
 const deleteUser = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
@@ -363,136 +320,17 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
   );
   return next(error);
 });
-//
-const homePage2 = (req, res) => {
-  res.sendFile(path.join(viewsPath, "view", "Home Page.html"));
-};
 
-const privacyPolicy = (req, res) => {
-  res.sendFile(path.join(viewsPath, "view", "Privacy Policy.html"));
-};
-
-const termsOfService = (req, res) => {
-  res.sendFile(path.join(viewsPath, "view", "Terms of Service.html"));
-};
-//
-const addphoto = asyncWrapper(async (req, res, next) => {
-  // الحصول على التاريخ والوقت الحالي
-  // const currentDate = moment();
-  const { explain, title } = req.body;
-  const oldData = await illnesses.findOne({ title: title });
-  if (oldData) {
-    const fileName = req.file.filename; // اسم الملف الذي تريد حذفه
-    const filePathToDelete = path.join(__dirname, "..", "uploads", fileName); // تحديد الملف بناءً على المجلد الجذر
-    fs.unlink(filePathToDelete, (err) => {
-      if (err) {
-        const error = appError.create(
-          "wrong in the delete photo",
-          400,
-          httpStatus.FAIL
-        );
-        return next(error);
-      }
-    });
-    const error = appError.create("data already saved", 400, httpStatus.FAIL);
-    return next(error);
-  }
-  const newData = new illnesses({
-    title: title,
-    avatar: req.file.filename,
-    explain: explain,
-    // date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
-  });
-  await newData.save();
-  res.json({ status: httpStatus.SUCCESS, data: newData });
-});
-
-const getAllData = asyncWrapper(async (req, res, next) => {
-  const all = await illnesses.find({}, { __v: false, _id: false });
-  if (all.length === 0) {
-    const error = appError.create("data is Empty!", 200, httpStatus.SUCCESS);
-    return next(error);
-  }
-  return res.json({ status: httpStatus.SUCCESS, data: all });
-});
-
-const getOneData = asyncWrapper(async (req, res, next) => {
-  const title = req.params.title;
-  const data = await illnesses.findOne(
-    { title: title },
-    { __v: false, _id: false }
-  );
-  if (!data) {
-    const error = appError.create("data not found!", 404, httpStatus.FAIL);
-    return next(error);
-  }
-  const currentUrl = `${req.protocol}://${req.get("host")}`;
-
-  return res.json({
-    status: httpStatus.SUCCESS,
-    data: data,
-    CurrentURLPhoto: `${currentUrl}/uploads/${data.avatar}`,
-  });
-});
-
-// لسه في تعديلات على avatar
-const updateData = asyncWrapper(async (req, res) => {
-  const updatedData = await illnesses.updateOne(
-    { title: req.params.title },
-    {
-      $set: { ...req.body },
-    }
-  );
-  return res.json({ status: httpStatus.SUCCESS, data: updatedData });
-});
-
-const deleteData = asyncWrapper(async (req, res, next) => {
-  const data = await illnesses.findOne({ title: req.params.title });
-  if (!data) {
-    const error = appError.create(
-      "this data not found !",
-      404,
-      httpStatus.FAIL
-    );
-    return next(error);
-  }
-  await illnesses.deleteOne({ title: req.params.title });
-  const fileName = data.avatar; // اسم الملف الذي تريد حذفه
-  const filePathToDelete = path.join(__dirname, "..", "uploads", fileName); // تحديد الملف بناءً على المجلد الجذر
-  fs.unlink(filePathToDelete, (err) => {
-    if (err) {
-      const error = appError.create(
-        "wrong in the delete photo",
-        400,
-        httpStatus.FAIL
-      );
-      return next(error);
-    }
-  });
-  const error = appError.create("data is delete", 200, httpStatus.SUCCESS);
-  return next(error);
-});
 module.exports = {
   //getAllUsers,
   // authGoogleCallback,
   // upload,
-  deleteData,
-  updateData,
-  getOneData,
-  getAllData,
-  addphoto,
-  homePage2,
-  privacyPolicy,
-  termsOfService,
   deleteUser,
   verify,
-  anyone,
-  // handleValidationErrors,
   forgotPassword,
   resetPasswordSend,
   resetPasswordOk,
   authGoogle,
-  homePage,
   register,
   login,
   logout,
