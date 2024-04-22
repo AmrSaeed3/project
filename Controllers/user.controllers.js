@@ -1,5 +1,4 @@
-const {user1 ,user2 , user4 , user8} = require("../Models/user.models");
-const fs = require("fs");
+const {user1 ,user2 } = require("../Models/user.models");
 const appError = require("../utils/appError");
 const httpStatus = require("../utils/httpStatus");
 const asyncWrapper = require("../Middlewires/asyncWrapper");
@@ -7,14 +6,11 @@ const generateJwt = require("../utils/generate.jwt");
 const { validationResult } = require("express-validator");
 const passport = require("passport");
 const bcrypt = require("bcryptjs");
-const mac = require("../Middlewires/mac");
 const emailVerfy = require("../Middlewires/sendEmail");
 const path = require("path");
 const moment = require("moment");
 const UserAll = user1;
 const UserGoogle = user2;
-const UserAnyone = user4;
-const illnesses = user8;
 // const
 // استخدام مسار كامل لمجلد views خارج الملف الرئيسي
 const viewsPath = path.join("E:\\programs\\NodeJs\\medical");

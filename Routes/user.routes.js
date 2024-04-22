@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const passport = require("passport");
 const usersController = require("../Controllers/user.controllers");
-const { uploadImage } = require("../Middlewires/multer");
 const {
   validationSchema,
   validationSchema2,

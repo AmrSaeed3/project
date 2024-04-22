@@ -39,30 +39,17 @@ const UserGoogle = new mongoose.Schema({
 const UserToken = new mongoose.Schema({
   token: String,
 });
-const UserAnyone = new mongoose.Schema({
-  mac: String,
-});
 const UserFaceBook = new mongoose.Schema({
   facebookId: String,
   displayName: String,
   // email: String,
   // token:String,
 });
-const UserJWT = new mongoose.Schema({
-  macAddress: { type: String, required: true, unique: true },
-});
-const illnesses = new mongoose.Schema({
-  title:String,
-  avatar: String,
-  explain: String,
-});
+
 const user1 = mongoose.model("User", User);
 const user2 = mongoose.model("UserGoogle", UserGoogle);
 const user3 = mongoose.model("UserToken", UserToken);
-const user4 = mongoose.model("UserAnyone", UserAnyone);
 const user6 = mongoose.model("UserFaceBook", UserFaceBook);
-const user7 = mongoose.model("UserJWT", UserJWT);
-const user8 = mongoose.model("illnesses" , illnesses)
 module.exports = {
   user1,
   user2,
