@@ -2,17 +2,17 @@ const { body } = require("express-validator");
 
 const validationSchema = () => {
   return [
-    body("email")
+    body("signup_email")
       .notEmpty()
       .withMessage("email is required")
       .isEmail()
       .withMessage("email is not avalid"),
-    body("password")
+    body("signup_password")
       .notEmpty()
       .withMessage("password is required")
       .isLength({ min: 4 })
       .withMessage("password at least is 4 digits"),
-    body("confirmPassword")
+    body("confirm_password")
       .notEmpty()
       .withMessage("password is required")
       .isLength({ min: 4 })
