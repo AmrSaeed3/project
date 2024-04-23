@@ -5,7 +5,7 @@ const asyncWrapper = require("../Middlewires/asyncWrapper");
 const generateJwt = require("../utils/generate.jwt");
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
-const moment = require("moment");
+const moment = require("moment-timezone");
 const UserAll = user1;
 // const
 
@@ -23,7 +23,7 @@ const register = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
   const hashPassword = await bcrypt.hash(password, 10);
-  const currentDate = moment();
+  const currentDate = moment().tz('Africa/Cairo');
   const newUser = new UserAll({
     userName,
     email,
@@ -270,7 +270,7 @@ const historyUser = asyncWrapper(async (req, res, next) => {
   const { link} = req.body;
     const { email } = req.currentUser;
   const result = link.substring(0, 5);
-  const currentDate = moment();
+  const currentDate = moment().tz('Africa/Cairo');
   const user = await UserAll.findOne({ email: email });
   user.Info.push({link:link, result:result, currentDate:currentDate.format("DD-MMM-YYYY hh:mm:ss a")});
   await user.save();
