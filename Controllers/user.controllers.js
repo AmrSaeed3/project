@@ -12,8 +12,6 @@ const moment = require("moment");
 const UserAll = user1;
 const UserGoogle = user2;
 // const
-// استخدام مسار كامل لمجلد views خارج الملف الرئيسي
-const viewsPath = path.join("E:\\programs\\NodeJs\\medical");
 
 //register
 const register = asyncWrapper(async (req, res, next) => {
@@ -22,67 +20,29 @@ const register = asyncWrapper(async (req, res, next) => {
     const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
     return next(error);
   }
-  const { userName, email, password, role } = req.body;
+  const { userName, email, password} = req.body;
   const olduser = await UserAll.findOne({ email: email });
   if (olduser) {
     const error = appError.create("user already exists", 400, httpStatus.FAIL);
     return next(error);
   }
   const hashPassword = await bcrypt.hash(password, 10);
-  const verifyCode = await emailVerfy.sendEmail(email);
-  const hashVerifyCode = await bcrypt.hash(JSON.stringify(verifyCode), 10);
-  const token = await generateJwt.generate({
-    email: email,
-    userName: userName,
-    role: role,
-    verifyCode: hashVerifyCode,
-    password: hashPassword,
-    // id: uuid.v4(),
+  const currentDate = moment();
+  const newUser = new UserAll({
+    userName,
+    email,
+    password,
+    date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
   });
+  await newUser.save();
+  res.json({ status: httpStatus.SUCCESS, data: { User: newUser } });
   return res.status(200).json({
     status: httpStatus.SUCCESS,
-    token: token.token,
-    expireData: token.expireIn,
   });
   // const redirectUrl = `/verify?userName=${userName}&email=${email}&password=${password}&token=${token}`;
   // res.redirect(redirectUrl)
 });
 
-const verify = asyncWrapper(async (req, res, next) => {
-  // الحصول على التاريخ والوقت الحالي
-  const currentDate = moment();
-  const { email, verifyCode, password, userName, role } = req.currentUser;
-  //  console.log("req.file", req.file);
-  const currentCode = verifyCode;
-  const code = req.body.code;
-  const matchedCode = await bcrypt.compare(code, currentCode);
-  if (!matchedCode) {
-    const error = appError.create(
-      "the code verification not correct",
-      400,
-      httpStatus.FAIL
-    );
-    return next(error);
-  }
-  const oldEmail = await UserAll.findOne({ email: email });
-  if (oldEmail) {
-    const error = appError.create(
-      "the email has been already registrated",
-      400,
-      httpStatus.FAIL
-    );
-    return next(error);
-  }
-  const newUser = new UserAll({
-    userName,
-    email,
-    password,
-    role,
-    date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
-  });
-  await newUser.save();
-  res.json({ status: httpStatus.SUCCESS, data: { User: newUser } });
-});
 //login
 const login = (req, res) => {
   const errors = validationResult(req);
@@ -322,7 +282,6 @@ module.exports = {
   // authGoogleCallback,
   // upload,
   deleteUser,
-  verify,
   forgotPassword,
   resetPasswordSend,
   resetPasswordOk,

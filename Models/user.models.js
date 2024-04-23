@@ -17,18 +17,18 @@ const User = new mongoose.Schema({
     type: String,
     require: [true, "email are required"],
   },
-  role: {
-    type: String, //["USER" , "ADMIN" , "MANGER"]
-    enum: [userRole.USER, userRole.ADMIN, userRole.MANGER],
-    default: userRole.USER,
+  token: {
+    type: String,
+    require: [true, "token are required"],
   },
   date: {
     type: String,
     require: [true, "date are required"],
   },
-  avatar: {
-    type: String,
-    default: "uploads/profile.png",
+  role: {
+    type: String, //["USER" , "ADMIN" , "MANGER"]
+    enum: [userRole.USER, userRole.ADMIN, userRole.MANGER],
+    default: userRole.USER,
   },
 });
 const UserGoogle = new mongoose.Schema({
@@ -46,7 +46,7 @@ const UserFaceBook = new mongoose.Schema({
   // token:String,
 });
 
-const user1 = mongoose.model("User", User);
+const user1 = mongoose.model("Acount", User);
 const user2 = mongoose.model("UserGoogle", UserGoogle);
 const user3 = mongoose.model("UserToken", UserToken);
 const user6 = mongoose.model("UserFaceBook", UserFaceBook);
