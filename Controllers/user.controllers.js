@@ -272,11 +272,12 @@ const historyUser = asyncWrapper(async (req, res, next) => {
   const result = link.substring(0, 5);
   const currentDate = moment().tz('Africa/Cairo');
   const user = await UserAll.findOne({ email: email });
-  user.Info.push({link:link, result:result, currentDate:currentDate.format("DD-MMM-YYYY hh:mm:ss a")});
+  user.Info.push({link:link, result:result, currentDate:currentDate.format("DD-MMM-YYYY hh:mm:ss a"),p1:10 , p2:15,p3:80});
   await user.save();
   // الرد بنجاح
   return res.status(200).json({
     status: httpStatus.SUCCESS,
+    data : user.Info
   });
 });
 
