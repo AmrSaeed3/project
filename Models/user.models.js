@@ -30,29 +30,18 @@ const User = new mongoose.Schema({
     enum: [userRole.USER, userRole.ADMIN, userRole.MANGER],
     default: userRole.USER,
   },
-});
-const UserGoogle = new mongoose.Schema({
-  googleId: String,
-  displayName: String,
-  email: String,
+  Info :{
+    type: Array,
+  },
 });
 const UserToken = new mongoose.Schema({
   token: String,
 });
-const UserFaceBook = new mongoose.Schema({
-  facebookId: String,
-  displayName: String,
-  // email: String,
-  // token:String,
-});
+
 
 const user1 = mongoose.model("Acount", User);
-const user2 = mongoose.model("UserGoogle", UserGoogle);
-const user3 = mongoose.model("UserToken", UserToken);
-const user6 = mongoose.model("UserFaceBook", UserFaceBook);
+const user2 = mongoose.model("UserToken", UserToken);
 module.exports = {
   user1,
   user2,
-  user3,
-  user6,
 };

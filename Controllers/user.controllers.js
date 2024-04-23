@@ -1,4 +1,4 @@
-const {user1 ,user2 } = require("../Models/user.models");
+const { user1 } = require("../Models/user.models");
 const appError = require("../utils/appError");
 const httpStatus = require("../utils/httpStatus");
 const asyncWrapper = require("../Middlewires/asyncWrapper");
@@ -7,7 +7,6 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const moment = require("moment");
 const UserAll = user1;
-const UserGoogle = user2;
 // const
 
 //register
@@ -17,7 +16,7 @@ const register = asyncWrapper(async (req, res, next) => {
     const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
     return next(error);
   }
-  const { userName, email, password} = req.body;
+  const { userName, email, password } = req.body;
   const olduser = await UserAll.findOne({ email: email });
   if (olduser) {
     const error = appError.create("user already exists", 400, httpStatus.FAIL);
@@ -28,7 +27,7 @@ const register = asyncWrapper(async (req, res, next) => {
   const newUser = new UserAll({
     userName,
     email,
-    password : hashPassword,
+    password: hashPassword,
     date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
   });
   await newUser.save();
@@ -267,12 +266,27 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
   );
   return next(error);
 });
+const historyUser = asyncWrapper(async (req, res, next) => {
+  const { link} = req.body;
+    const { email } = req.currentUser;
+  const result = link.substring(0, 5);
+  const currentDate = moment();
+  const user = await UserAll.findOne({ email: email });
+  user.Info.push({link:link, result:result, currentDate:currentDate.format("DD-MMM-YYYY hh:mm:ss a")});
+  await user.save();
+  // الرد بنجاح
+  return res.status(200).json({
+    status: httpStatus.SUCCESS,
+  });
+});
 
+//
 module.exports = {
   //getAllUsers,
   // authGoogleCallback,
   // upload,
   deleteUser,
+  historyUser,
   // forgotPassword,
   // resetPasswordSend,
   // resetPasswordOk,
