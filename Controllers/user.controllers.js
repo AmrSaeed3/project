@@ -29,7 +29,7 @@ const register = asyncWrapper(async (req, res, next) => {
   const hashPassword = await bcrypt.hash(signup_password, 10);
   const currentDate = moment().tz('Africa/Cairo');
   const newUser = new UserAll({
-    email,
+    email :signup_email,
     password: hashPassword,
     date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
   });
