@@ -1,9 +1,7 @@
 const express = require("express");
-const passport = require("passport");
 const expressSession = require("express-session");
 const bodyParser = require("body-parser");
 const connectFlash = require("connect-flash");
-const passportConfig = require("./Middlewires/passport");
 const httpStatusTex = require("./utils/httpStatus");
 const app = express();
 const path = require("path")
@@ -13,10 +11,6 @@ const utl = process.env.MONGO_URL;
 mongoose.connect(utl).then(() => {
   console.log("mongoDB server start");
 });
-// mongoose.connect("mongodb://localhost/passport-google-example", {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// });
 app.use(express.json());
 app.use(
   expressSession({
@@ -33,11 +27,8 @@ app.use(cors());
 const compression = require("compression");
 app.use(compression());
 app.use(connectFlash());
-app.use(passport.initialize());
-app.use(passport.session());
 app.use(bodyParser.json());
 
-passportConfig();
 
 const usersRouter = require("./Routes/user.routes");
 app.use("/", usersRouter); //api/users

@@ -4,10 +4,7 @@ const httpStatus = require("../utils/httpStatus");
 const asyncWrapper = require("../Middlewires/asyncWrapper");
 const generateJwt = require("../utils/generate.jwt");
 const { validationResult } = require("express-validator");
-const passport = require("passport");
 const bcrypt = require("bcryptjs");
-const emailVerfy = require("../Middlewires/sendEmail");
-const path = require("path");
 const moment = require("moment");
 const UserAll = user1;
 const UserGoogle = user2;
@@ -96,94 +93,94 @@ const login2 = asyncWrapper(async (req, res, next) => {
 });
 // مسار لإعادة تعيين كلمة المرور (نسيان الباسورد)
 
-const forgotPassword = asyncWrapper(async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
-    return next(error);
-  }
-  const email = req.body.email;
-  const user = await UserAll.findOne({ email: email });
-  if (!user) {
-    const error = appError.create(
-      "not found this email !",
-      400,
-      httpStatus.FAIL
-    );
-    return next(error);
-  }
-  const verifyCode = await emailVerfy.sendEmail(email);
-  const hashVerifyCode = await bcrypt.hash(JSON.stringify(verifyCode), 10);
-  const token = await generateJwt.generate({
-    email: email,
-    id: user._id,
-    role: user.role,
-    verifyCode: hashVerifyCode,
-    // id: uuid.v4(),
-  });
-  return res.status(200).json({
-    status: httpStatus.SUCCESS,
-    // data: newUser,
-    token: token.token,
-    expireData: token.expireIn,
-  });
-  // res.redirect(`/reset-password`)
-});
+// const forgotPassword = asyncWrapper(async (req, res, next) => {
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
+//     return next(error);
+//   }
+//   const email = req.body.email;
+//   const user = await UserAll.findOne({ email: email });
+//   if (!user) {
+//     const error = appError.create(
+//       "not found this email !",
+//       400,
+//       httpStatus.FAIL
+//     );
+//     return next(error);
+//   }
+//   const verifyCode = await emailVerfy.sendEmail(email);
+//   const hashVerifyCode = await bcrypt.hash(JSON.stringify(verifyCode), 10);
+//   const token = await generateJwt.generate({
+//     email: email,
+//     id: user._id,
+//     role: user.role,
+//     verifyCode: hashVerifyCode,
+//     // id: uuid.v4(),
+//   });
+//   return res.status(200).json({
+//     status: httpStatus.SUCCESS,
+//     // data: newUser,
+//     token: token.token,
+//     expireData: token.expireIn,
+//   });
+//   // res.redirect(`/reset-password`)
+// });
 
-const resetPasswordSend = asyncWrapper(async (req, res, next) => {
-  const { email, verifyCode, role, id } = req.currentUser;
-  const currentCode = verifyCode;
-  const code = req.body.code;
-  const matchedCode = await bcrypt.compare(code, currentCode);
-  if (!matchedCode) {
-    const error = appError.create(
-      "the code verification not correct try again",
-      400,
-      httpStatus.FAIL
-    );
-    return next(error);
-  }
-  const token = await generateJwt.generate({
-    email: email,
-    role: role,
-    id: id,
-    // id: uuid.v4(),
-  });
-  return res.status(200).json({
-    status: httpStatus.SUCCESS,
-    token: token.token,
-    expireData: token.expireIn,
-  });
-});
-//
-const resetPasswordOk = asyncWrapper(async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
-    return next(error);
-  }
-  const { email, role, id } = req.currentUser;
-  const newPassword = req.body.newPassword;
-  const newPassword2 = req.body.newPassword2;
-  if (newPassword !== newPassword2) {
-    const error = appError.create(
-      "the password is not the same",
-      400,
-      httpStatus.FAIL
-    );
-    return next(error);
-  }
-  const hashPassword = await bcrypt.hash(newPassword, 10);
-  const newUser = await UserAll.findOne({ email: email });
-  newUser.password = hashPassword;
-  await newUser.save();
-  const error = appError.create(
-    "the password has been reset successfully",
-    200,
-    httpStatus.SUCCESS
-  );
-  return next(error);
-});
+// const resetPasswordSend = asyncWrapper(async (req, res, next) => {
+//   const { email, verifyCode, role, id } = req.currentUser;
+//   const currentCode = verifyCode;
+//   const code = req.body.code;
+//   const matchedCode = await bcrypt.compare(code, currentCode);
+//   if (!matchedCode) {
+//     const error = appError.create(
+//       "the code verification not correct try again",
+//       400,
+//       httpStatus.FAIL
+//     );
+//     return next(error);
+//   }
+//   const token = await generateJwt.generate({
+//     email: email,
+//     role: role,
+//     id: id,
+//     // id: uuid.v4(),
+//   });
+//   return res.status(200).json({
+//     status: httpStatus.SUCCESS,
+//     token: token.token,
+//     expireData: token.expireIn,
+//   });
+// });
+// //
+// const resetPasswordOk = asyncWrapper(async (req, res, next) => {
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
+//     return next(error);
+//   }
+//   const { email, role, id } = req.currentUser;
+//   const newPassword = req.body.newPassword;
+//   const newPassword2 = req.body.newPassword2;
+//   if (newPassword !== newPassword2) {
+//     const error = appError.create(
+//       "the password is not the same",
+//       400,
+//       httpStatus.FAIL
+//     );
+//     return next(error);
+//   }
+//   const hashPassword = await bcrypt.hash(newPassword, 10);
+//   const newUser = await UserAll.findOne({ email: email });
+//   newUser.password = hashPassword;
+//   await newUser.save();
+//   const error = appError.create(
+//     "the password has been reset successfully",
+//     200,
+//     httpStatus.SUCCESS
+//   );
+//   return next(error);
+// });
 
 const logout2 = (req, res) => {
   // req.logout((err) => {
@@ -218,33 +215,33 @@ const failure = (req, res, next) => {
   return next(error);
 };
 
-const logout = async (req, res) => {
-  if (req.isAuthenticated()) {
-    const { email } = req.user;
+// const logout = async (req, res) => {
+//   if (req.isAuthenticated()) {
+//     const { email } = req.user;
 
-    // توفير وظيفة callback
-    req.logout(() => {
-      // حذف البريد الإلكتروني من قاعدة البيانات
-      UserGoogle
-        .findOneAndDelete({ email })
-        .then(() => {
-          // حذف الكوكيز معرف المستخدم
-          res.clearCookie("userId");
-          res.clearCookie("sessionToken");
-          res.redirect("/");
-        })
-        .catch((err) => {
-          console.error("Error deleting user:", err);
-          res.redirect("/");
-        });
-    });
+//     // توفير وظيفة callback
+//     req.logout(() => {
+//       // حذف البريد الإلكتروني من قاعدة البيانات
+//       UserGoogle
+//         .findOneAndDelete({ email })
+//         .then(() => {
+//           // حذف الكوكيز معرف المستخدم
+//           res.clearCookie("userId");
+//           res.clearCookie("sessionToken");
+//           res.redirect("/");
+//         })
+//         .catch((err) => {
+//           console.error("Error deleting user:", err);
+//           res.redirect("/");
+//         });
+//     });
 
-    return;
-  }
+//     return;
+//   }
 
-  // إذا لم يكن المستخدم قد قام بتسجيل الدخول، قم بتوجيهه إلى الصفحة الرئيسية أو أي مكان آخر
-  res.redirect("/");
-};
+//   // إذا لم يكن المستخدم قد قام بتسجيل الدخول، قم بتوجيهه إلى الصفحة الرئيسية أو أي مكان آخر
+//   res.redirect("/");
+// };
 
 const deleteUser = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
@@ -276,12 +273,12 @@ module.exports = {
   // authGoogleCallback,
   // upload,
   deleteUser,
-  forgotPassword,
-  resetPasswordSend,
-  resetPasswordOk,
+  // forgotPassword,
+  // resetPasswordSend,
+  // resetPasswordOk,
   register,
   login,
-  logout,
+  // logout,
   logout2,
   success,
   failure,
