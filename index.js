@@ -25,15 +25,7 @@ app.use(
     saveUninitialized: false,
   })
 );
-// app.use(
-//   session({
-//     secret: config.session.secret,
-//     resave: true,
-//     saveUninitialized: true,
-//   })
-// );
-//
-//just html
+
 app.use(bodyParser.urlencoded({ extended: true }));
 //
 const cors = require("cors");

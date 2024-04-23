@@ -246,12 +246,6 @@ const logout = async (req, res) => {
   res.redirect("/");
 };
 
-const authGoogle = (req, res) => {
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-  })(req, res);
-};
-
 const deleteUser = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -285,7 +279,6 @@ module.exports = {
   forgotPassword,
   resetPasswordSend,
   resetPasswordOk,
-  authGoogle,
   register,
   login,
   logout,
