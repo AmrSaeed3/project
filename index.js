@@ -50,8 +50,6 @@ passportConfig();
 const usersRouter = require("./Routes/user.routes");
 app.use("/", usersRouter); //api/users
 
-const firstAidRouter = require("./Routes/first aid.routes");
-app.use("/api/firstAid", firstAidRouter); //api/firstAid
 app.use('/uploads',express.static(path.join(__dirname ,'uploads')))
 app.all("*", (req, res, next) => {
   return res.status(404).json({
