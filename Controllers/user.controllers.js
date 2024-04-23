@@ -271,7 +271,7 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
 });
 const historyUser = asyncWrapper(async (req, res, next) => {
   const { link} = req.body;
-    const { email } = req.currentUser;
+  const { email } = req.currentUser;
   const result = link.substring(0, 5);
   const currentDate = moment().tz('Africa/Cairo');
   const user = await UserAll.findOne({ email: email });
@@ -280,7 +280,8 @@ const historyUser = asyncWrapper(async (req, res, next) => {
   // الرد بنجاح
   return res.status(200).json({
     status: httpStatus.SUCCESS,
-    data : user.Info
+    result : result ,
+    allData : user.Info
   });
 });
 
