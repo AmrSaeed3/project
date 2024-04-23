@@ -36,8 +36,10 @@ const register = asyncWrapper(async (req, res, next) => {
   await newUser.save();
   res.json({ status: httpStatus.SUCCESS, data: { User: newUser } });
   return res.status(200).json({
-    status: httpStatus.SUCCESS,
-  });
+    status: "SUCCESS",
+    message: "User created successfully",
+    data: { User: newUser },
+  });
   // const redirectUrl = `/verify?userName=${userName}&email=${email}&password=${password}&token=${token}`;
   // res.redirect(redirectUrl)
 });
