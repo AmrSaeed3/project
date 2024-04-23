@@ -31,7 +31,7 @@ const register = asyncWrapper(async (req, res, next) => {
   const newUser = new UserAll({
     userName,
     email,
-    password,
+    password : hashPassword,
     date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
   });
   await newUser.save();
@@ -76,11 +76,11 @@ const login2 = asyncWrapper(async (req, res, next) => {
       id: user._id,
       role: user.role,
     });
-    user.token = token.token;
+    user.token = token;
     await user.save();
     res.json({
       status: httpStatus.SUCCESS,
-      data: { token: token.token },
+      data: { token: token },
     });
   } else if (user.password !== password) {
     const error = appError.create(
