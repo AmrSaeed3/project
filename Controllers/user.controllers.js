@@ -16,16 +16,19 @@ const register = asyncWrapper(async (req, res, next) => {
     const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
     return next(error);
   }
-  const { userName, email, password } = req.body;
+  const { email, password , confirmPassword } = req.body;
   const olduser = await UserAll.findOne({ email: email });
   if (olduser) {
     const error = appError.create("user already exists", 400, httpStatus.FAIL);
     return next(error);
   }
+  if(password != confirmPassword){
+    const error = appError.create("Password is not same", 400, httpStatus.FAIL);
+    return next(error);
+  }
   const hashPassword = await bcrypt.hash(password, 10);
   const currentDate = moment().tz('Africa/Cairo');
   const newUser = new UserAll({
-    userName,
     email,
     password: hashPassword,
     date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
