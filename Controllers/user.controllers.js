@@ -269,12 +269,12 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
   return next(error);
 });
 const historyUser = asyncWrapper(async (req, res, next) => {
-  const { link} = req.body;
+  const { youtube_link } = req.body;
   const { email } = req.currentUser;
   const result = link.substring(0, 5);
   const currentDate = moment().tz('Africa/Cairo');
   const user = await UserAll.findOne({ email: email });
-  user.Info.push({link:link, result:result, currentDate:currentDate.format("DD-MMM-YYYY hh:mm:ss a"),p1:10 , p2:15,p3:80});
+  user.Info.push({link:youtube_link, result:result, currentDate:currentDate.format("DD-MMM-YYYY hh:mm:ss a"),p1:10 , p2:15,p3:80});
   await user.save();
   // الرد بنجاح
   return res.status(200).json({
