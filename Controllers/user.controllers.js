@@ -271,7 +271,7 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
 const historyUser = asyncWrapper(async (req, res, next) => {
   const { youtube_link } = req.body;
   const { email } = req.currentUser;
-  const result = link.substring(0, 5);
+  const result = youtube_link.substring(0, 5);
   const currentDate = moment().tz('Africa/Cairo');
   const user = await UserAll.findOne({ email: email });
   user.Info.push({link:youtube_link, result:result, currentDate:currentDate.format("DD-MMM-YYYY hh:mm:ss a"),p1:10 , p2:15,p3:80});
