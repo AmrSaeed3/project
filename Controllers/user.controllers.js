@@ -280,6 +280,9 @@ const historyUser = asyncWrapper(async (req, res, next) => {
   return res.status(200).json({
     status: httpStatus.SUCCESS,
     result : result ,
+    p1:10,
+    p2:60,
+    p3:90,
     allData : user.Info
   });
 });
