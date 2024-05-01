@@ -42,18 +42,7 @@ const register = asyncWrapper(async (req, res, next) => {
 });
 
 //login
-const login = (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
-    return next(error);
-  }
-  passport.authenticate("local", {
-    successRedirect: "/success",
-    failureRedirect: "/failure",
-    failureFlash: true,
-  })(req, res);
-};
+
 const login2 = asyncWrapper(async (req, res, next) => {
   const { email, password } = req.body;
   const errors = validationResult(req);
@@ -269,21 +258,21 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
   return next(error);
 });
 const historyUser = asyncWrapper(async (req, res, next) => {
-  const { youtube_link } = req.body;
-  // const { email } = req.currentUser;
-  const result = youtube_link.substring(0, 5);
-  const currentDate = moment().tz('Africa/Cairo');
-  // const user = await UserAll.findOne({ email: email });
+  // const { youtube_link } = req.body;
+  email  = "amr1@gmail.com"
+  // const result = youtube_link.substring(0, 5);
+  // const currentDate = moment().tz('Africa/Cairo');
+  const user = await UserAll.findOne({ email: email });
   // user.Info.push({link:youtube_link, result:result, currentDate:currentDate.format("DD-MMM-YYYY hh:mm:ss a"),p1:10 , p2:15,p3:80});
-  // await user.save();
+  await user.save();
   // الرد بنجاح
   return res.status(200).json({
     status: httpStatus.SUCCESS,
-    result : result ,
-    p1:10,
-    p2:60,
-    p3:90,
-    // allData : user.Info
+    // result : result ,
+    // p1:10,
+    // p2:60,
+    // p3:90,
+    allData : user.Info
   });
 });
 
@@ -298,7 +287,6 @@ module.exports = {
   // resetPasswordSend,
   // resetPasswordOk,
   register,
-  login,
   // logout,
   logout2,
   success,

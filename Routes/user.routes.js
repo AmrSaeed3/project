@@ -12,12 +12,11 @@ const verifyToken = require("../Middlewires/verify.token");
 router.route("/register").post(validationSchema(),usersController.register);
 
 
-router.route("/login").post(validationSchema2(), usersController.login);
 
 router.route("/login2").post(validationSchema2(), usersController.login2);
 
 // router.route("/historyUser").post(verifyToken ,usersController.historyUser);
-router.route("/historyUser").post(usersController.historyUser);
+router.route("/historyUser").get(usersController.historyUser);
 // مسار لإعادة تعيين كلمة المرور (نسيان الباسورد)
 // router
 //   .route("/forgot-password")
