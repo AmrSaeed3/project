@@ -245,16 +245,21 @@ const historyUser = asyncWrapper(async (req, res, next) => {
 
 const addData = asyncWrapper(async (req, res, next) => {
   const { youtube_link, result } = req.body;
-  const user = user1.findOne({ email: "amr9@gmail.com" });
+  console.log(req.body)
+  const user =await user1.findOne({ email: "amr9@gmail.com" });
   if (!user) {
     const error = appError.create("user not found !", 400, httpStatus.FAIL);
     return next(error);
   }
   const currentDate = moment().tz("Africa/Cairo");
   user.Info.push({
-    link: youtube_link,
-    result: result,
+     youtube_link,
+     result,
     currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
+  });
+  await user.save();
+  res.json({
+    status: httpStatus.SUCCESS,
   });
 });
 //
