@@ -16,27 +16,27 @@ const register = asyncWrapper(async (req, res, next) => {
     const error = appError.create(errors.array()[0], 400, httpStatus.FAIL);
     return next(error);
   }
-  const { signup_email, signup_password , confirm_password } = req.body;
+  const { signup_email, signup_password, confirm_password } = req.body;
   const olduser = await UserAll.findOne({ email: signup_email });
   if (olduser) {
     const error = appError.create("user already exists", 400, httpStatus.FAIL);
     return next(error);
   }
-  if(signup_password != confirm_password){
+  if (signup_password != confirm_password) {
     const error = appError.create("Password is not same", 400, httpStatus.FAIL);
     return next(error);
   }
   const hashPassword = await bcrypt.hash(signup_password, 10);
-  const currentDate = moment().tz('Africa/Cairo');
+  const currentDate = moment().tz("Africa/Cairo");
   const newUser = new UserAll({
-    email :signup_email,
+    email: signup_email,
     password: hashPassword,
     date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
   });
   await newUser.save();
   return res.status(200).json({
     status: httpStatus.SUCCESS,
-  });
+  });
   // const redirectUrl = `/verify?userName=${userName}&email=${email}&password=${password}&token=${token}`;
   // res.redirect(redirectUrl)
 });
@@ -172,39 +172,6 @@ const login2 = asyncWrapper(async (req, res, next) => {
 //   return next(error);
 // });
 
-const logout2 = (req, res) => {
-  // req.logout((err) => {
-  //   if (err) {
-  //     return res
-  //       .status(500)
-  //       .json("Logout failed! " + req.flash("error"))
-  //       .redirect("/"); // أو يمكنك التعامل مع الخطأ بطريقة أخرى
-  //   }
-  //   res.redirect("/");
-  // });
-  (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        console.error("Error during logout:", err);
-        return res
-          .status(500)
-          .json({ status: "error", message: "Internal Server Error" });
-      }
-      res.redirect("/login");
-    });
-  };
-};
-const success = (req, res, next) => {
-  const error = appError.create("Login successful!", 200, httpStatus.SUCCESS);
-  return next(error);
-};
-const failure = (req, res, next) => {
-  const result = req.flash("error");
-  // res.status(401).json("Login failed! " + req.flash("error"));
-  const error = appError.create(result[0], 401, httpStatus.FAIL);
-  return next(error);
-};
-
 // const logout = async (req, res) => {
 //   if (req.isAuthenticated()) {
 //     const { email } = req.user;
@@ -259,7 +226,7 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
 });
 const historyUser = asyncWrapper(async (req, res, next) => {
   // const { youtube_link } = req.body;
-  email  = "amr1@gmail.com"
+  email = "amr1@gmail.com";
   // const result = youtube_link.substring(0, 5);
   // const currentDate = moment().tz('Africa/Cairo');
   const user = await UserAll.findOne({ email: email });
@@ -272,24 +239,33 @@ const historyUser = asyncWrapper(async (req, res, next) => {
     // p1:10,
     // p2:60,
     // p3:90,
-    allData : user.Info
+    allData: user.Info,
   });
 });
 
+const addData = asyncWrapper(async (req, res, next) => {
+  const { youtube_link, result } = req.body;
+  const user = user1.findOne({ email: "amr9@gmail.com" });
+  if (!user) {
+    const error = appError.create("user not found !", 400, httpStatus.FAIL);
+    return next(error);
+  }
+  const currentDate = moment().tz("Africa/Cairo");
+  user.Info.push({
+    link: youtube_link,
+    result: result,
+    currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
+  });
+});
 //
 module.exports = {
   //getAllUsers,
-  // authGoogleCallback,
-  // upload,
+  addData,
   deleteUser,
   historyUser,
   // forgotPassword,
   // resetPasswordSend,
   // resetPasswordOk,
   register,
-  // logout,
-  logout2,
-  success,
-  failure,
   login2,
 };

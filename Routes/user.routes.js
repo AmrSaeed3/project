@@ -35,20 +35,9 @@ router
   .route("/deleteUser")
   .post(validationSchema4(), usersController.deleteUser);
 
-router.route("/success").get(usersController.success);
-
-router.route("/failure").get(usersController.failure);
-
-// router.route("/logout").get(usersController.logout);
-
-
-router.route("/logout2").get(usersController.logout2);
-
-// مسار رئيسي
-router.get("/2", (req, res) => {
-  res.send("Home Page");
-});
-//
+router
+  .route("/addData")
+  .post(usersController.addData);
 
 
 module.exports = router;
