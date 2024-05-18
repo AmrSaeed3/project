@@ -261,24 +261,28 @@ const addData = asyncWrapper(async (req, res, next) => {
   }
 
   const currentDate = moment().tz("Africa/Cairo");
-  const existingIndex = user.Info.findIndex(info => info.youtube_link === youtube_link);
+  const existingIndex = user.Info.findIndex(
+    (info) => info.youtube_link === youtube_link
+  );
 
   if (existingIndex !== -1) {
     // إذا كان الرابط موجودًا، قم بتحديث التاريخ والبيانات المحددة وحرك العنصر إلى البداية
-    user.Info[existingIndex].currentDate = currentDate.format("DD-MMM-YYYY hh:mm:ss a");
+    user.Info[existingIndex].currentDate = currentDate.format(
+      "DD-MMM-YYYY hh:mm:ss a"
+    );
 
     // تحديث القيم المحددة فقط
-    if (result.hasOwnProperty('summary')) {
+    if (result.hasOwnProperty("summarize")) {
       user.Info[existingIndex].summary = result.summary;
     }
     if (
-      result.hasOwnProperty('positive') &&
-      result.hasOwnProperty('negative') &&
-      result.hasOwnProperty('advantage')
+      result.hasOwnProperty("positive_percentage") &&
+      result.hasOwnProperty("negative_percentage") &&
+      result.hasOwnProperty("neutral_percentage")
     ) {
-      user.Info[existingIndex].positive = result.positive;
-      user.Info[existingIndex].negative = result.negative;
-      user.Info[existingIndex].advantage = result.advantage;
+      user.Info[existingIndex].positive_percentage = result.positive_percentage;
+      user.Info[existingIndex].negative_percentage = result.negative_percentage;
+      user.Info[existingIndex].neutral_percentage = result.neutral_percentage;
     }
 
     // تحريك العنصر إلى البداية
@@ -291,16 +295,16 @@ const addData = asyncWrapper(async (req, res, next) => {
       currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
     };
 
-    if (result.hasOwnProperty('summary')) {
-      newInfo.summary = result.summary;
-      newInfo.positive = 0;
-      newInfo.negative = 0;
-      newInfo.advantage = 0;
+    if (result.hasOwnProperty("summary")) {
+      newInfo.summarize = result.summarize;
+      newInfo.negative_percentage = 0;
+      newInfo.neutral_percentage = 0;
+      newInfo.positive_percentage = 0;
     } else {
-      newInfo.summary = '';
-      newInfo.positive = result.positive;
-      newInfo.negative = result.negative;
-      newInfo.advantage = result.advantage;
+      newInfo.summarize = "empty";
+      newInfo.negative_percentage = result.negative_percentage;
+      newInfo.neutral_percentage = result.neutral_percentage;
+      newInfo.positive_percentage = result.positive_percentage;
     }
 
     user.Info.unshift(newInfo);
@@ -312,7 +316,6 @@ const addData = asyncWrapper(async (req, res, next) => {
     status: httpStatus.SUCCESS,
   });
 });
-
 
 //
 module.exports = {
