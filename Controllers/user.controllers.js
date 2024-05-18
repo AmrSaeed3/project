@@ -253,7 +253,7 @@ const historyUser = asyncWrapper(async (req, res, next) => {
 // });
 const addData = asyncWrapper(async (req, res, next) => {
   const { youtube_link, result } = req.body;
-  const user = await user1.findOne({ email: "amr9@gmail.com" });
+  const user = await UserAll.findOne({ email: "amr9@gmail.com" });
 
   if (!user) {
     const error = appError.create("user not found !", 400, httpStatus.FAIL);
