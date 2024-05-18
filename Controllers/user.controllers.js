@@ -295,7 +295,7 @@ const addData = asyncWrapper(async (req, res, next) => {
       currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
     };
 
-    if (result.hasOwnProperty("summary")) {
+    if (result.hasOwnProperty("summaries")) {
       newInfo.summaries = result.summaries;
       newInfo.negative_percentage = 0;
       newInfo.neutral_percentage = 0;
