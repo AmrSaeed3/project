@@ -302,9 +302,9 @@ const addData = asyncWrapper(async (req, res, next) => {
       newInfo.positive_percentage = 0;
     } else {
       newInfo.summaries = "empty";
-      newInfo.negative_percentage = result.negative_percentage;
-      newInfo.neutral_percentage = result.neutral_percentage;
-      newInfo.positive_percentage = result.positive_percentage;
+      newInfo.negative_percentage = result.negative_percentage || 0;
+      newInfo.neutral_percentage = result.neutral_percentage || 0;
+      newInfo.positive_percentage = result.positive_percentage || 0;
     }
 
     user.Info.unshift(newInfo);
