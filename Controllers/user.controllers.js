@@ -274,9 +274,9 @@ const addData = asyncWrapper(async (req, res, next) => {
     );
 
     // تحديث القيم المحددة فقط
-    if (result.hasOwnProperty("summaries")) {
-      user.Info[existingIndex].summaries = result.summaries[0].summary;
-      user.Info[existingIndex].time_range = result.summaries[0].time_range;
+    if (result.hasOwnProperty("summary")) {
+      user.Info[existingIndex].summaries = result.summary;
+      user.Info[existingIndex].time_range = result.time_range;
     }
     if (
       result.hasOwnProperty("positive_percentage") &&
@@ -298,9 +298,9 @@ const addData = asyncWrapper(async (req, res, next) => {
       currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
     };
 
-    if (result.hasOwnProperty("summaries")) {
-      newInfo.summaries = result.summaries[0].summary;
-      newInfo.time_range = result.summaries[0].time_range;
+    if (result.hasOwnProperty("summary")) {
+      newInfo.summaries = result.summary;
+      newInfo.time_range = result.time_range;
       newInfo.negative_percentage = 0;
       newInfo.neutral_percentage = 0;
       newInfo.positive_percentage = 0;
