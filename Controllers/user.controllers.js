@@ -243,24 +243,87 @@ const historyUser = asyncWrapper(async (req, res, next) => {
   });
 });
 
+// const addData = asyncWrapper(async (req, res, next) => {
+//   const { youtube_link, result } = req.body;
+//   const user =await user1.findOne({ email: "amr9@gmail.com" });
+//   if (!user) {
+//     const error = appError.create("user not found !", 400, httpStatus.FAIL);
+//     return next(error);
+//   }
+//   const currentDate = moment().tz("Africa/Cairo");
+//   user.Info.push({
+//      youtube_link,
+//      result,
+//     currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
+//   });
+//   await user.save();
+//   res.json({
+//     status: httpStatus.SUCCESS,
+//   });
+// });
 const addData = asyncWrapper(async (req, res, next) => {
   const { youtube_link, result } = req.body;
-  const user =await user1.findOne({ email: "amr9@gmail.com" });
+  const user = await user1.findOne({ email: "amr9@gmail.com" });
+
   if (!user) {
     const error = appError.create("user not found !", 400, httpStatus.FAIL);
     return next(error);
   }
+
   const currentDate = moment().tz("Africa/Cairo");
-  user.Info.push({
-     youtube_link,
-     result,
-    currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
-  });
+  const existingIndex = user.Info.findIndex(info => info.youtube_link === youtube_link);
+
+  if (existingIndex !== -1) {
+    // إذا كان الرابط موجودًا، قم بتحديث التاريخ والبيانات المحددة وحرك العنصر إلى البداية
+    user.Info[existingIndex].currentDate = currentDate.format("DD-MMM-YYYY hh:mm:ss a");
+
+    // تحديث القيم المحددة فقط
+    if (result.hasOwnProperty('summary')) {
+      user.Info[existingIndex].summary = result.summary;
+    }
+    if (
+      result.hasOwnProperty('positive') &&
+      result.hasOwnProperty('negative') &&
+      result.hasOwnProperty('advantage')
+    ) {
+      user.Info[existingIndex].positive = result.positive;
+      user.Info[existingIndex].negative = result.negative;
+      user.Info[existingIndex].advantage = result.advantage;
+    }
+
+    // تحريك العنصر إلى البداية
+    const updatedInfo = user.Info.splice(existingIndex, 1)[0];
+    user.Info.unshift(updatedInfo);
+  } else {
+    // إذا كان الرابط غير موجود، أضف البيانات الجديدة
+    const newInfo = {
+      youtube_link,
+      currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
+    };
+
+    if (result.hasOwnProperty('summary')) {
+      newInfo.summary = result.summary;
+      newInfo.positive = 0;
+      newInfo.negative = 0;
+      newInfo.advantage = 0;
+    } else {
+      newInfo.summary = '';
+      newInfo.positive = result.positive;
+      newInfo.negative = result.negative;
+      newInfo.advantage = result.advantage;
+    }
+
+    user.Info.unshift(newInfo);
+  }
+
   await user.save();
+
   res.json({
     status: httpStatus.SUCCESS,
   });
 });
+
+
 //
 module.exports = {
   //getAllUsers,
