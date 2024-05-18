@@ -274,6 +274,7 @@ const addData = asyncWrapper(async (req, res, next) => {
     // تحديث القيم المحددة فقط
     if (result.hasOwnProperty("summaries")) {
       user.Info[existingIndex].summaries = result.summaries[0].summary;
+      user.Info[existingIndex].time_range = result.summaries[0].time_range;
     }
     if (
       result.hasOwnProperty("positive_percentage") &&
@@ -297,11 +298,13 @@ const addData = asyncWrapper(async (req, res, next) => {
 
     if (result.hasOwnProperty("summaries")) {
       newInfo.summaries = result.summaries[0].summary;
+      newInfo.time_range = result.summaries[0].time_range;
       newInfo.negative_percentage = 0;
       newInfo.neutral_percentage = 0;
       newInfo.positive_percentage = 0;
     } else {
       newInfo.summaries = "empty";
+      newInfo.time_range = "empty";
       newInfo.negative_percentage = result.negative_percentage || 0;
       newInfo.neutral_percentage = result.neutral_percentage || 0;
       newInfo.positive_percentage = result.positive_percentage || 0;
