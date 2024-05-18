@@ -273,7 +273,7 @@ const addData = asyncWrapper(async (req, res, next) => {
 
     // تحديث القيم المحددة فقط
     if (result.hasOwnProperty("summaries")) {
-      user.Info[existingIndex].summaries = result.summaries.summary;
+      user.Info[existingIndex].summaries = result.summaries[0].summary;
     }
     if (
       result.hasOwnProperty("positive_percentage") &&
@@ -296,7 +296,7 @@ const addData = asyncWrapper(async (req, res, next) => {
     };
 
     if (result.hasOwnProperty("summaries")) {
-      newInfo.summaries = result.summaries.summary;
+      newInfo.summaries = result.summaries[0].summary;
       newInfo.negative_percentage = 0;
       newInfo.neutral_percentage = 0;
       newInfo.positive_percentage = 0;
