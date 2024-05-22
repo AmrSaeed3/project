@@ -233,24 +233,14 @@ const historyUser = asyncWrapper(async (req, res, next) => {
   });
 });
 
-// const addData = asyncWrapper(async (req, res, next) => {
-//   const { youtube_link, result } = req.body;
-//   const user =await user1.findOne({ email: "amr9@gmail.com" });
-//   if (!user) {
-//     const error = appError.create("user not found !", 400, httpStatus.FAIL);
-//     return next(error);
-//   }
-//   const currentDate = moment().tz("Africa/Cairo");
-//   user.Info.push({
-//      youtube_link,
-//      result,
-//     currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
-//   });
-//   await user.save();
-//   res.json({
-//     status: httpStatus.SUCCESS,
-//   });
-// });
+const historyUser2 = asyncWrapper(async (req, res, next) => {
+  const { email, role, id } = req.currentUser;
+  const user = await UserAll.findOne({ email: email });
+  return res.status(200).json({
+    status: httpStatus.SUCCESS,
+    allData: user.Info,
+  });
+});
 
 const addData = asyncWrapper(async (req, res, next) => {
   const { youtube_link, result } = req.body;
@@ -321,12 +311,120 @@ const addData = asyncWrapper(async (req, res, next) => {
   });
 });
 
+const addData2 = asyncWrapper(async (req, res, next) => {
+  const { youtube_link, result } = req.body;
+  const { email, role, id } = req.currentUser;
+  const user = await UserAll.findOne({ email: email });
+
+  if (!user) {
+    const error = appError.create("user not found !", 400, httpStatus.FAIL);
+    return next(error);
+  }
+
+  const currentDate = moment().tz("Africa/Cairo");
+  const existingIndex = user.Info.findIndex(
+    (info) => info.youtube_link === youtube_link
+  );
+
+  if (existingIndex !== -1) {
+    // إذا كان الرابط موجودًا، قم بتحديث التاريخ والبيانات المحددة وحرك العنصر إلى البداية
+    user.Info[existingIndex].currentDate = currentDate.format(
+      "DD-MMM-YYYY hh:mm:ss a"
+    );
+
+    // تحديث القيم المحددة فقط
+    if (result.hasOwnProperty("summary")) {
+      user.Info[existingIndex].summaries = result.summary;
+      user.Info[existingIndex].time_range = result.time_range;
+    }
+    if (
+      result.hasOwnProperty("positive_percentage") &&
+      result.hasOwnProperty("negative_percentage") &&
+      result.hasOwnProperty("neutral_percentage")
+    ) {
+      user.Info[existingIndex].positive_percentage = result.positive_percentage;
+      user.Info[existingIndex].negative_percentage = result.negative_percentage;
+      user.Info[existingIndex].neutral_percentage = result.neutral_percentage;
+    }
+
+    // تحريك العنصر إلى البداية
+    const updatedInfo = user.Info.splice(existingIndex, 1)[0];
+    user.Info.unshift(updatedInfo);
+  } else {
+    // إذا كان الرابط غير موجود، أضف البيانات الجديدة
+    const newInfo = {
+      youtube_link,
+      currentDate: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
+    };
+
+    if (result.hasOwnProperty("summary")) {
+      newInfo.summaries = result.summary;
+      newInfo.time_range = result.time_range;
+      newInfo.negative_percentage = 0;
+      newInfo.neutral_percentage = 0;
+      newInfo.positive_percentage = 0;
+    } else {
+      newInfo.summaries = "empty";
+      newInfo.time_range = "empty";
+      newInfo.negative_percentage = result.negative_percentage || 0;
+      newInfo.neutral_percentage = result.neutral_percentage || 0;
+      newInfo.positive_percentage = result.positive_percentage || 0;
+    }
+
+    user.Info.unshift(newInfo);
+  }
+
+  await user.save();
+
+  res.json({
+    status: httpStatus.SUCCESS,
+  });
+});
+
+const deleteData = asyncWrapper(async (req, res, next) => {
+  const { num } = req.params;
+  // // const numbers = req.params.num;
+
+  const { email, role, id } = req.currentUser;
+  const user = await UserAll.findOne({ email: email });
+  if (!user) {
+    const error = appError.create(
+      "not found this email !",
+      400,
+      httpStatus.FAIL
+    );
+    return next(error);
+  }
+
+  if (user.Info.length == 0) {
+    const error = appError.create(
+      "youtube link not found in user's info!",
+      400,
+      httpStatus.FAIL
+    );
+    return next(error);
+  }
+  // حذف الرابط من المصفوفة
+  user.Info.splice(existingIndex, 1);
+
+  // حفظ التغييرات في قاعدة البيانات
+  await user.save();
+  const error = appError.create(
+    "this data has been deleted",
+    200,
+    httpStatus.SUCCESS
+  );
+  return next(error);
+});
 //
 module.exports = {
   //getAllUsers,
   addData,
+  addData2,
+  deleteData,
   deleteUser,
   historyUser,
+  historyUser2,
   // forgotPassword,
   // resetPasswordSend,
   // resetPasswordOk,

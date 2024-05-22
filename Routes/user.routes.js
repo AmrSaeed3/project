@@ -9,9 +9,7 @@ const {
 } = require("../Middlewires/validationSchema");
 const verifyToken = require("../Middlewires/verify.token");
 
-router.route("/register").post(validationSchema(),usersController.register);
-
-
+router.route("/register").post(validationSchema(), usersController.register);
 
 router.route("/login2").post(validationSchema2(), usersController.login2);
 
@@ -31,13 +29,18 @@ router.route("/historyUser").get(usersController.historyUser);
 //   .post(verifyToken, validationSchema3(), usersController.resetPasswordOk);
 // //
 
+router.route("/historyUser2").get(verifyToken, usersController.historyUser2);
+
 router
   .route("/deleteUser")
   .post(validationSchema4(), usersController.deleteUser);
 
 router
-  .route("/addData")
-  .post(usersController.addData);
+  .route("/deleteData/:num")
+  .get(usersController.deleteData);
 
+router.route("/addData").post(usersController.addData);
+
+router.route("/addData2").post(verifyToken, usersController.addData2);
 
 module.exports = router;
