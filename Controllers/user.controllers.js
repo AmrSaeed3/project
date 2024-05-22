@@ -396,16 +396,8 @@ const deleteData = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  if (user.Info.length == 0) {
-    const error = appError.create(
-      "youtube link not found in user's info!",
-      400,
-      httpStatus.FAIL
-    );
-    return next(error);
-  }
   // حذف الرابط من المصفوفة
-  user.Info.splice(existingIndex, 1);
+  user.Info.splice(num, 1);
 
   // حفظ التغييرات في قاعدة البيانات
   await user.save();
