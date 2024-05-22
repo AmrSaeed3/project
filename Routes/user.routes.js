@@ -37,7 +37,7 @@ router
 
 router
   .route("/deleteData/:num")
-  .get(verifyToken,usersController.deleteData);
+  .delete(verifyToken,usersController.deleteData);
 
 router.route("/addData").post(usersController.addData);
 
