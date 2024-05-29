@@ -26,15 +26,20 @@ const register = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
   const hashPassword = await bcrypt.hash(signup_password, 10);
+  const token = await generateJwt.generate({
+    email: signup_email,
+  });
   const currentDate = moment().tz("Africa/Cairo");
   const newUser = new UserAll({
     email: signup_email,
     password: hashPassword,
     date: currentDate.format("DD-MMM-YYYY hh:mm:ss a"),
+    token : token
   });
   await newUser.save();
   return res.status(200).json({
     status: httpStatus.SUCCESS,
+    data: { token: token },
   });
   // const redirectUrl = `/verify?userName=${userName}&email=${email}&password=${password}&token=${token}`;
   // res.redirect(redirectUrl)
