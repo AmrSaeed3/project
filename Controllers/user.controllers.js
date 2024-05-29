@@ -328,7 +328,7 @@ const deleteData = asyncWrapper(async (req, res, next) => {
     "this data has been deleted",
     200,
     httpStatus.SUCCESS ,
-    user.Info
+    user.Info[num]
   );
   return next(error);
 });
