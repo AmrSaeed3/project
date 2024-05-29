@@ -318,19 +318,18 @@ const deleteData = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
+  const data = user.Info[num]
 
   // حذف الرابط من المصفوفة
   user.Info.splice(num, 1);
 
   // حفظ التغييرات في قاعدة البيانات
   await user.save();
-  const error = appError.create(
-    "this data has been deleted",
-    200,
-    httpStatus.SUCCESS ,
-    user.Info[num]
-  );
-  return next(error);
+  res.status(200).json({
+    status: httpStatus.SUCCESS,
+    message : "this data has been deleted",
+    data : data
+  });
 });
 //
 module.exports = {
