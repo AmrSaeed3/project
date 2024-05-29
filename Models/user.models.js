@@ -34,14 +34,8 @@ const User = new mongoose.Schema({
     type: Array,
   },
 });
-const UserToken = new mongoose.Schema({
-  token: String,
-});
-
 
 const user1 = mongoose.model("Acount", User);
-const user2 = mongoose.model("UserToken", UserToken);
 module.exports = {
   user1,
-  user2,
 };

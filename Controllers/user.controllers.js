@@ -7,7 +7,6 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const moment = require("moment-timezone");
 const UserAll = user1;
-// const
 
 //register
 const register = asyncWrapper(async (req, res, next) => {
@@ -334,7 +333,6 @@ const deleteData = asyncWrapper(async (req, res, next) => {
 });
 //
 module.exports = {
-  //getAllUsers,
   addData2,
   deleteData,
   deleteUser,
