@@ -4,7 +4,6 @@ const bodyParser = require("body-parser");
 const connectFlash = require("connect-flash");
 const httpStatusTex = require("./utils/httpStatus");
 const app = express();
-const path = require("path")
 const mongoose = require("mongoose");
 require("dotenv").config();
 const utl = process.env.MONGO_URL;
