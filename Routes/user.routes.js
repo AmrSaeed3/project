@@ -13,8 +13,7 @@ router.route("/register").post(validationSchema(), usersController.register);
 
 router.route("/login2").post(validationSchema2(), usersController.login2);
 
-// router.route("/historyUser").post(verifyToken ,usersController.historyUser);
-router.route("/historyUser").get(usersController.historyUser);
+
 // مسار لإعادة تعيين كلمة المرور (نسيان الباسورد)
 // router
 //   .route("/forgot-password")
@@ -39,7 +38,6 @@ router
   .route("/deleteData/:num")
   .delete(verifyToken,usersController.deleteData);
 
-router.route("/addData").post(usersController.addData);
 
 router.route("/addData2").post(verifyToken, usersController.addData2);
 
