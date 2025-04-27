@@ -8,6 +8,7 @@ const globalError = require ('./middleware/errorMiddleware');
 const CategoryRoute = require("./routes/categoryRoute")
 const SubCategoryRoute = require("./routes/subCategoryRoute")
 const BrandRoute = require("./routes/brandRoute")
+const ProductRoute = require("./routes/productRoute")
 const dbConection = require ('./config/database');
 
 
@@ -30,10 +31,10 @@ if ( NODE_ENV === 'development'){
 app.use('/api/v1/categories', CategoryRoute); 
 app.use('/api/v1/subcategories', SubCategoryRoute);
 app.use('/api/v1/brand', BrandRoute);
-
+app.use('/api/v1/products', ProductRoute);
 // 404 handler
 app.all('*', (req, res, next) => { 
-    next(ApiError(`Can't find this route: ${req.originalUrl}`, 404));
+    next(new ApiError(`Can't find this route: ${req.originalUrl}`, 404));
 });
 
 

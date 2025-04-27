@@ -1,19 +1,18 @@
 // This file contains the service layer for category-related operations.
-const Category = require("../models/categoryModel");
-
+const Product = require("../models/productModel");
 const factory = require("./handlersFactory");
 
 // This function sets the category ID to the request body for nested routes.
-exports.createCategory = factory.createOne(Category);
+exports.createProduct = factory.createOne(Product);
 
 // This function retrieves all categories from the database.
-exports.getCategory = factory.getAll(Category);
+exports.getProduct = factory.getAll(Product)
 
 // This function retrieves a single category by its ID from the database.
-exports.getCategoryByID = factory.getOne(Category);
+exports.getProductByID = factory.getOne(Product);
 
 // This function updates a category by its ID in the database.
-exports.updateCategoryByID = factory.updateOne(Category);
+exports.updateProductByID = factory.updateOne(Product);
 
 // This function deletes a category by its ID from the database.
-exports.deletecategoryByID =factory.deleteOne(Category);
+exports.deleteProductByID  = factory.deleteOne(Product); 

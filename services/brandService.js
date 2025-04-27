@@ -1,73 +1,21 @@
-const slugify = require("slugify");
-const asyncHandler = require("express-async-handler");
-const Brand = require("../models/brandModel ");
-const ApiError = require("../utils/apiError");
+// This file contains the service layer for category-related operations.
+const Brand = require("../models/brandModel");
+// This file contains the service layer for brand-related operations.
+const factory = require("./handlersFactory");
 
-exports.createBrand = asyncHandler(async (req, res) => {
-    const name = req.body.name;
-    const brand = 
-    await Brand
-        .create({ name, slug: slugify(name) });
-    res
-        .status(201)
-        .json({ data: brand });
-});
 
-exports.getBrand = asyncHandler(async (req, res) => {
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 5;
-    const skip = (page - 1) * limit;
 
-    const brands = 
-    await Brand
-        .find({})
-        .skip(skip)
-        .limit(limit);
-    res
-        .status(200)
-        .json({ result: brands.length, page, data: brands });
-});
+// This function sets the category ID to the request body for nested routes.
+exports.createBrand = factory.createOne(Brand);
 
-exports.getBrandByID = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const brand = 
-    await Brand
-        .findById(id);
+// This function retrieves all brands from the database.
+exports.getBrand = factory.getAll(Brand)
 
-    !brand
-    ? next(new ApiError(`No brand found for this ID ${id}`, 404))
-    : res
-        .status(200)
-        .json({ data: brand });
-});
+// This function retrieves a single brand by its ID from the database.
+exports.getBrandByID = factory.getOne(Brand);
 
-exports.updateBrandByID = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const { name } = req.body;
-    const brand = 
-    await Brand
-        .findOneAndUpdate(
-            { _id: id },
-            { name, slug: slugify(name) },
-            { new: true }
-        );
+// This function updates a brand by its ID in the database.
+exports.updateBrandByID = factory.updateOne(Brand);
 
-    !brand
-    ? next(new ApiError(`No brand found for this ID ${id}`, 404))
-    : res
-        .status(200)
-        .json({ data: brand });
-});
-
-exports.deleteBrandByID = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    const brand = 
-    await Brand
-        .findByIdAndDelete(id);
-
-    !brand
-    ? next(new ApiError(`No brand found for this ID ${id}`, 404))
-    : res
-    .status(200)
-    .json({ data: brand });
-});
+// This function deletes a brand by its ID from the database.
+exports.deleteBrandByID = factory.deleteOne(Brand);

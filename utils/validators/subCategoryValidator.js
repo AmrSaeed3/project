@@ -1,5 +1,7 @@
 const {check} = require('express-validator');
 const validatorMiddleware = require('../../middleware/validatorMiddleware');
+const slugify = require("slugify");
+const Category = require("../../models/categoryModel");
 
 
 exports.createSubCategoryValidator = [
@@ -7,12 +9,25 @@ exports.createSubCategoryValidator = [
         .notEmpty()
         .withMessage('category name required')
         .isLength({min:3,max:23})
-        .withMessage('category name must be between 3 and 23 characters'),
+        .withMessage('category name must be between 3 and 23 characters')
+        .custom((val, { req }) => {
+            req.body.slug = slugify(val);
+            return true;
+        }),
     check('category')
         .notEmpty()
         .withMessage('category id required')
         .isMongoId()
-        .withMessage('invalid category id format'),
+        .withMessage('invalid category id format')
+        .custom((val) => {
+            return Category.findById(val).then((category) => {
+                if (!category) {
+                    return Promise.reject(
+                        new Error(`No category found for this ID: ${val}`)
+                    );
+                }
+            });
+        }),
     validatorMiddleware,
 ];
 exports.updateSubCategoryValidator = [
@@ -24,7 +39,11 @@ exports.updateSubCategoryValidator = [
         .notEmpty()
         .withMessage('category name required')
         .isLength({min:3,max:23})
-        .withMessage('category name must be between 3 and 23 characters'),
+        .withMessage('category name must be between 3 and 23 characters')
+        .custom((val, {req}) => {
+            req.body.slug = slugify(val);
+            return true;
+            }),
     check('category')
         .optional()
         .notEmpty()
