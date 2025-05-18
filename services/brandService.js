@@ -1,8 +1,32 @@
-// This file contains the service layer for category-related operations.
-const Brand = require("../models/brandModel");
-// This file contains the service layer for brand-related operations.
-const factory = require("./handlersFactory");
 
+const sharp = require("sharp");
+const { v4: uuidv4 } = require('uuid');
+const asyncHandler = require("express-async-handler");
+
+const factory = require("./handlersFactory");
+const {uploadSingleImage}= require("../middleware/uploadImageMiddleware");
+const Brand = require("../models/brandModel");
+
+
+
+
+
+// This function handles the image upload for brands.
+exports.uploadBrandImage =uploadSingleImage('image');
+
+// This function resizes the uploaded image and saves it to the server.
+exports.resizeImage = asyncHandler(async (req, res, next) => {
+    const filename = `brand-${uuidv4()}-${Date.now()}.jpeg`;
+    await sharp(req.file.buffer)
+        .resize(500, 500)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`uploads/brands/${filename}`);
+
+    //save image in db
+    req.body.image = filename;
+    next();
+});
 
 
 // This function sets the category ID to the request body for nested routes.

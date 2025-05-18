@@ -11,7 +11,9 @@ const{createProduct,
     getProduct, 
     getProductByID,
     updateProductByID,
-    deleteProductByID
+    deleteProductByID,
+    uploadProductImages,
+    resizeProductImages
 }=require("../services/productService")
 
 const router = express.Router();
@@ -21,12 +23,12 @@ const router = express.Router();
 // /api/Product
 router.route('/')
 .get(getProduct)
-.post(createProductValidator,createProduct);
+.post(createProductValidator,uploadProductImages,resizeProductImages,createProduct);
 
 // /api/Product/:id
 router.route('/:id')
 .get(getProductValidator,getProductByID)
-.put(updateProductValidator,updateProductByID)
+.put(updateProductValidator,uploadProductImages,resizeProductImages,updateProductByID)
 .delete(deleteProductValidator,deleteProductByID);
 
 module.exports= router;

@@ -11,9 +11,13 @@ const{createCategory,
     getCategory, 
     getCategoryByID,
     updateCategoryByID,
-    deletecategoryByID
-}=require("../services/categoryService")
+    deletecategoryByID,
+    uploadCategoryImage,
+    resizeImage
+}=require("../services/categoryService");
+
 const subCategoryRoute = require('./subCategoryRoute');
+
 const router = express.Router();
 
 // /api/category/subcategory
@@ -28,7 +32,7 @@ router.route('/')
 // /api/category/:id
 router.route('/:id')
 .get(getCategoryValidator,getCategoryByID)
-.put(updateCategoryValidator,updateCategoryByID)
+.put(updateCategoryValidator,uploadCategoryImage,resizeImage,updateCategoryByID)
 .delete(deletecategoryValidator,deletecategoryByID);
 
 module.exports= router;
