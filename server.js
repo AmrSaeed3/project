@@ -45,24 +45,20 @@ app.all('*', (req, res, next) => {
 app.use(globalError);
 
 
-//server
+// server
 const PORT = process.env.PORT || 8000;
-const HOST = process.env.Host || 'localhost'; // استخدم المتغير من ملف config.env
+const HOST = '0.0.0.0'; // This is crucial for cloud platforms like Render
 
-app.listen(PORT, HOST, () => {
-    console.log(`App is running on http://${HOST}:${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+    console.log(`Server running on ${HOST}:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
 });
 
-
-
-
-
-// handel rejections outside express
-
+// handle rejections outside express
 process.on('unhandledRejection', (err) => {
     console.log(`Unhandled Rejection: ${err.name} | ${err.message}`);
     server.close(() => {
         console.log('Shutting down...');
         process.exit(1);
     });
-})
+});
