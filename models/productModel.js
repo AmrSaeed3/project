@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema(
     {
-        title: {
+        name: {
             type: String,
             required: [true, 'product name required'],
             minlength:[3,'too short product name'],
@@ -62,19 +62,34 @@ const productSchema = new mongoose.Schema(
         brand: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Brand", // Ensure this matches the name of the Brand model
-        }, 
+        },
+        typecategory:{type:String ,            
+            required: [true, 'typecategory name required'],
+            unique: [true, 'Category must be unique'],
+            minlength:[3,'too short typecategory name'],
+            maxlength:[23,'too long typecategory name'],},
+        subcategory1:{type:String ,             
+            required: [true, 'subcategory1 name required'],
+            unique: [true, 'Category must be unique'],
+            minlength:[3,'too short subcategory1 name'],
+            maxlength:[23,'too long subcategory1 name'],},
+        subcategory2:{type:String ,             
+            required: [true, 'subcategory2 name required'],
+            unique: [true, 'Category must be unique'],
+            minlength:[3,'too short subcategory2 name'],
+            maxlength:[23,'too long subcategory2 name'],}, 
         ratingsAverage: {
-            type: Number,
-            min: [1, 'rating must be at least 1'],
-            max: [5, 'rating must be at most 5'],
+        type: Number,
+        min: [1, 'rating must be at least 1'],
+        max: [5, 'rating must be at most 5'],
         },
         ratingsQuantity: {
             type: Number,
             default: 0,
         },
-        size: {
-            type: String,
-            enum: ["XS", "S", "M", "L", "XL", "XXL"],
+        sizes: {
+            type: Array,
+            default: [], 
         },
     },
     {
@@ -98,27 +113,18 @@ productSchema.pre(/^find/, function (next) {
     next();
 })
 
-const setImageURL = (doc) => {
-    if (doc.imageCover) {
-        const imageUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;
-        doc.imageCover = imageUrl;
-    }
-    if (doc.images) {
-        const imagesList = [];
-        doc.images.forEach((image) => {
-            const imageUrl = `${process.env.BASE_URL}/products/${image}`;
-            imagesList.push(imageUrl);
-        });
-        doc.images = imagesList;
-    }
-};
-// findOne, findAll and update
+// Remove the setImageURL function since we're storing full URLs now
+// If you want to keep the existing URL transformation logic, you can leave it,
+// but it's not needed if you're storing complete Cloudinary URLs
+
+// Remove these hooks if you're storing complete URLs
+/*
 productSchema.post('init', (doc) => {
     setImageURL(doc);
 });
 
-// create
 productSchema.post('save', (doc) => {
     setImageURL(doc);
 });
+*/
 module.exports = mongoose.model("Product", productSchema);

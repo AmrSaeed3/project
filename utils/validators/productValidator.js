@@ -3,12 +3,10 @@ const { check, body } = require("express-validator");
 const validatorMiddleware = require("../../middleware/validatorMiddleware");
 const Category = require("../../models/categoryModel");
 const SubCategory = require("../../models/subCategoryModel");
-const Brand = require("../../models/brandModel"); // Ensure this is correctly imported
-
-const ApiError = require("../apiError");
+const Brand = require("../../models/brandModel"); 
 
 exports.createProductValidator = [
-    check("title")
+    check("name")
         .isLength({ min: 3 })
         .withMessage("must be at least 3 chars")
         .notEmpty()
@@ -53,15 +51,44 @@ exports.createProductValidator = [
             }
             return true;
         }),
-    check("size")
+    check("sizes")
         .optional()
-        .isIn(["XS", "S", "M", "L", "XL", "XXL"])
-        .withMessage("Invalid size. Allowed values are XS, S, M, L, XL, XXL"),
+        .isArray()
+        .withMessage("Available sizes should be array of string")
+        .custom((val, { req }) => {
+            if (val.length > 0) {
+                req.body.sizes = val;
+            }
+            return true;
+        }),
     check("colors")
         .optional()
         .isArray()
         .withMessage("availableColors should be array of string"),
-    check("imageCover").notEmpty().withMessage("Product imageCover is required"),
+    check("typecategory")
+        .notEmpty()
+        .withMessage("Product typecategory is required")
+        .isLength({ min: 3 })
+        .withMessage("Too short typecategory name")
+        .isLength({ max: 23 })
+        .withMessage("Too long typecategory name"),
+    check("subcategory1")
+        .notEmpty()
+        .withMessage("Product subcategory1 is required")
+        .isLength({ min: 3 })
+        .withMessage("Too short subcategory1 name")
+        .isLength({ max: 23 })
+        .withMessage("Too long subcategory1 name"),
+    check("subcategory2")
+        .optional()
+        .isLength({ min: 3 })
+        .withMessage("Too short subcategory2 name")
+        .isLength({ max: 23 })
+        .withMessage("Too long subcategory2 name"),
+
+    check("imageCover")
+        .notEmpty()
+        .withMessage("Product imageCover is required"),
     check("images")
         .optional()
         .isArray()
@@ -148,7 +175,7 @@ exports.getProductValidator = [
 
 exports.updateProductValidator = [
     check("id").isMongoId().withMessage("Invalid ID formate"),
-    body("title")
+    body("name")
         .optional()
         .custom((val, { req }) => {
             req.body.slug = slugify(val);

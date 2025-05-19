@@ -4,31 +4,41 @@ const {
     updateProductValidator,
     getProductValidator,
     deleteProductValidator
-
 } = require('../utils/validators/productValidator');
 
-const{createProduct,
+const {
+    createProduct,
     getProduct, 
     getProductByID,
     updateProductByID,
     deleteProductByID,
     uploadProductImages,
-    resizeProductImages
-}=require("../services/productService")
+    resizeProductImages,
+    validateProductImages
+} = require("../services/productService");
 
 const router = express.Router();
 
-
-
-// /api/Product
+// /api/v1/products
 router.route('/')
-.get(getProduct)
-.post(createProductValidator,uploadProductImages,resizeProductImages,createProduct);
+    .get(getProduct)
+    .post(
+        uploadProductImages,
+        resizeProductImages,
+        validateProductImages,
+        createProductValidator,
+        createProduct
+    );
 
-// /api/Product/:id
+// /api/v1/products/:id
 router.route('/:id')
-.get(getProductValidator,getProductByID)
-.put(updateProductValidator,uploadProductImages,resizeProductImages,updateProductByID)
-.delete(deleteProductValidator,deleteProductByID);
+    .get(getProductValidator, getProductByID)
+    .put(
+        uploadProductImages,
+        resizeProductImages,
+        updateProductValidator,
+        updateProductByID
+    )
+    .delete(deleteProductValidator, deleteProductByID);
 
-module.exports= router;
+module.exports = router;

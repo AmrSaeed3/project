@@ -32,7 +32,7 @@ router.route('/')
 // /api/category/:id
 router.route('/:id')
 .get(getCategoryValidator,getCategoryByID)
-.put(updateCategoryValidator,uploadCategoryImage,resizeImage,updateCategoryByID)
+.put(updateCategoryValidator,updateCategoryByID)
 .delete(deletecategoryValidator,deletecategoryByID);
 
 module.exports= router;
