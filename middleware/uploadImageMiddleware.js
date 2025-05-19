@@ -134,4 +134,47 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
     next();
 });
 
+// User image upload middleware
+exports.uploadUserImage = (req, res, next) => {
+    // Single file upload for user profile image
+    upload.single('image')(req, res, (err) => {
+        if (err) {
+            if (err instanceof multer.MulterError) {
+                if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+                    return next(new ApiError('Too many files uploaded', 400));
+                }
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    return next(new ApiError('File too large (max: 5MB)', 400));
+                }
+            }
+            return next(err);
+        }
+        
+        console.log('User image received:', req.file);
+        next();
+    });
+};
+
+// Process user image
+exports.resizeUserImage = asyncHandler(async (req, res, next) => {
+    // Skip if no file uploaded
+    if (!req.file) {
+        return next();
+    }
+
+    // Process and resize user image
+    const processedImageBuffer = await sharp(req.file.buffer)
+        .resize(500, 500)  // Square profile image
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toBuffer();
+    
+    // Upload to Cloudinary
+    const imageUrl = await uploadToCloudinary(processedImageBuffer, 'users/profiles');
+    
+    // Save image URL to req.body
+    req.body.image = imageUrl;
+    
+    next();
+});
 
