@@ -3,7 +3,8 @@ const {
     createUserValidator,
     updateUserValidator,
     getUserValidator,
-    deleteUserValidator
+    toggleUserActiveValidator,
+    changeUserPasswordValidator
 } = require('../utils/validators/userValidator');
 
 const {
@@ -11,9 +12,10 @@ const {
     getUser,
     getUserByID,
     updateUserByID,
-    deleteUserByID,
+    toggleUserActiveStatus,
     uploadUserImage,
-    resizeUserImage
+    resizeUserImage,
+    changeUserPassword
 } = require("../services/userService");
 
 const router = express.Router();
@@ -36,7 +38,20 @@ router.route('/:id')
         resizeUserImage,
         updateUserValidator,
         updateUserByID
-    )
-    .delete(deleteUserValidator, deleteUserByID);
+    );
+
+// /api/v1/users/toggleActive/:id
+router.patch(
+    '/toggleActive/:id',
+    toggleUserActiveValidator,
+    toggleUserActiveStatus
+);
+
+// /api/v1/users/changePassword/:id
+router.put(
+    '/changePassword/:id',
+    changeUserPasswordValidator,
+    changeUserPassword
+);
 
 module.exports = router;

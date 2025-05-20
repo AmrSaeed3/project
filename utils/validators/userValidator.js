@@ -1,5 +1,5 @@
 const { check } = require('express-validator');
-// const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 const validatorMiddleware = require('../../middleware/validatorMiddleware');
 const User = require('../../models/userModel');
 const slugify = require('slugify');
@@ -41,35 +41,34 @@ exports.createUserValidator = [
         .withMessage('Password cannot exceed 32 characters')
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
         .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+        // .custom((val, { req }) => {
+        //     if (val !== req.body.passwordConfirm) {
+        //         throw new Error('Password confirmation does not match password');
+        //     }
+        //     return true;
+        // }),
 
-    check('passwordConfirm')
-        .notEmpty()
-        .withMessage('Password confirmation is required')
-        .custom((val, { req }) => {
-            if (val !== req.body.password) {
-                throw new Error('Password confirmation does not match password');
-            }
-            return true;
-        }),
+    // check('passwordConfirm')
+    //     .notEmpty()
+    //     .withMessage('Password confirmation is required')
+    //     .custom((val, { req }) => {
+    //         if (val !== req.body.password) {
+    //             throw new Error('Password confirmation does not match password');
+    //         }
+    //         return true;
+    //     }),
 
     check('phone')
         .optional()
         .isMobilePhone(['ar-EG'])
         .withMessage('Invalid phone number format, only Egyptian numbers is supported')
         .isLength({ min: 11, max: 13 })
-        .withMessage('Phone number must be between 10 and 13 digits'),
+        .withMessage('Phone number must be between 11 and 13 digits'),
 
     check('role')
         .optional()
         .isIn(['user', 'admin'])
         .withMessage('Invalid role, must be either user or admin'),
-
-    check('address')
-        .optional()
-        .isLength({ min: 3 })
-        .withMessage('Address must be at least 3 characters long')
-        .isLength({ max: 100 })
-        .withMessage('Address cannot exceed 100 characters'),
 
     validatorMiddleware,
 ];
@@ -115,21 +114,32 @@ exports.updateUserValidator = [
         .optional()
         .isMobilePhone(['ar-EG'])
         .withMessage('Invalid phone number format, only Egyptian numbers is supported')
-        .isLength({ min: 10, max: 13 })
-        .withMessage('Phone number must be between 10 and 13 digits'),
+        .isLength({ min: 11, max: 13 })
+        .withMessage('Phone number must be between 11 and 13 digits'),
 
     check('role')
         .optional()
         .isIn(['user', 'admin'])
         .withMessage('Invalid role, must be either user or admin'),
+        
+    // Explicitly reject password fields in regular updates
+    check('password')
+        .not()
+        .exists()
+        .withMessage('This route is not for password updates. Please use /changePassword/:id'),
+        
+    // check('passwordConfirm')
+    //     .not()
+    //     .exists()
+    //     .withMessage('This route is not for password updates. Please use /changePassword/:id'),
 
-    check('address')
-        .optional()
-        .isLength({ min: 3 })
-        .withMessage('Address must be at least 3 characters long')
-        .isLength({ max: 100 })
-        .withMessage('Address cannot exceed 100 characters'),
-    
+    validatorMiddleware,
+];
+
+exports.toggleUserActiveValidator = [
+    check('id')
+        .isMongoId()
+        .withMessage('Invalid user ID format'),
     validatorMiddleware,
 ];
 
@@ -150,47 +160,15 @@ exports.changeUserPasswordValidator = [
         .isLength({ max: 32 })
         .withMessage('Password cannot exceed 32 characters')
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
-        // .custom(async (val, { req }) => {
-        //     // Verify current password
-        //     const user = await User.findById(req.params.id);
-        //     if (!user) {
-        //         throw new Error('User not found');
-        //     }
-            
-        //     const isCorrectPassword = await bcrypt.compare(
-        //         req.body.currentPassword,
-        //         user.password
-        //     );
-            
-        //     if (!isCorrectPassword) {
-        //         throw new Error('Current password is incorrect');
-        //     }
-            
-        //     // Ensure new password is different from current password
-        //     if (req.body.currentPassword === val) {
-        //         throw new Error('New password must be different from current password');
-        //     }
-            
-        //     return true;
-        // }),
-
-    check('passwordConfirm')
-        .notEmpty()
-        .withMessage('Password confirmation is required')
-        .custom((val, { req }) => {
-            if (val !== req.body.password) {
-                throw new Error('Password confirmation does not match password');
+        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
+        .custom(async (val, { req }) => {
+            // Ensure new password is different from current password
+            if (req.body.currentPassword === val) {
+                throw new Error('New password must be different from current password');
             }
+            
             return true;
         }),
 
-    validatorMiddleware,
-];
-
-exports.deleteUserValidator = [
-    check('id')
-        .isMongoId()
-        .withMessage('Invalid user ID format'),
     validatorMiddleware,
 ];

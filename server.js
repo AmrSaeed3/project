@@ -12,6 +12,7 @@ const SubCategoryRoute = require("./routes/subCategoryRoute")
 const BrandRoute = require("./routes/brandRoute")
 const ProductRoute = require("./routes/productRoute")
 const UserRoute = require("./routes/userRoute")
+const AuthRoute = require("./routes/authRoute")
 const dbConection = require ('./config/database');
 
 
@@ -37,6 +38,7 @@ app.use('/api/v1/subcategories', SubCategoryRoute);
 app.use('/api/v1/brand', BrandRoute);
 app.use('/api/v1/products', ProductRoute);
 app.use('/api/v1/users', UserRoute);
+app.use('/api/v1/auth', AuthRoute);
 // 404 handler
 app.all('*', (req, res, next) => { 
     next(new ApiError(`Can't find this route: ${req.originalUrl}`, 404));
