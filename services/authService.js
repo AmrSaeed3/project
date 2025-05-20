@@ -1,9 +1,11 @@
-const asyncHandler = require('express-async-handler');
-const User = require('../models/userModel');
-const ApiError = require('../utils/apiError');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-
+const asyncHandler = require('express-async-handler');
+const ApiError = require('../utils/apiError');
+const sendSMS = require('../utils/sendSMS');
+const { formatToE164, isValidE164 } = require('../utils/phoneFormatter');
+const User = require('../models/userModel');
 
 const createToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -35,7 +37,7 @@ exports.signupUser = asyncHandler(async (req, res, next) => {
     // 4) Create token
     const token = createToken(user._id);
     
-    // 5) Send response
+    // 6) Send response
     res.status(201).json({
         status: 'success',
         data: user,
@@ -79,38 +81,88 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
 
 // Forgot password
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
-    const { email } = req.body;
+    let { phone } = req.body;
     
-    // 1) Check if email exists
-    const user = await User.findOne({ email });
-    if (!user) {
-        return next(new ApiError('There is no user with this email address', 404));
+    // 1) Check if phone exists
+    if (!phone) {
+        return next(new ApiError('Please provide your phone number', 400));
     }
     
-    // 2) Generate random reset code
-    const resetCode = Math.floor(100000 + Math.random() * 900000);
+    // Format phone to E.164 if it's not already
+    if (!isValidE164(phone)) {
+        phone = formatToE164(phone);
+        if (!isValidE164(phone)) {
+            return next(new ApiError('Invalid phone number format. Please provide a valid phone number.', 400));
+        }
+    }
     
-    // 3) Save reset code and expiration time to user document
-    user.passwordResetToken = resetCode;
+    // 2) Check if user exists with this phone number
+    const user = await User.findOne({ phone });
+    if (!user) {
+        return next(new ApiError('There is no user with this phone number', 404));
+    }
+    
+    // 3) Generate random reset code
+    const resetCode = Math.floor(100000 + Math.random() * 900000);
+    const hashedResetCode = crypto
+        .createHash('sha256')
+        .update(resetCode.toString())
+        .digest('hex');
+
+    // Save hashed reset code to db
+    user.passwordResetToken = hashedResetCode;
     user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save({ validateBeforeSave: false });
-    
-    // 4) Send response
-    res.status(200).json({
-        status: 'success',
-        message: 'Reset code sent to email',
-        resetCode
-    });
-    
+
+    try {
+        // In development, we can skip actual SMS sending
+        if (process.env.NODE_ENV === 'development' && process.env.SMS_PROVIDER === 'log') {
+            console.log('==== DEVELOPMENT MODE: SMS NOT ACTUALLY SENT ====');
+            console.log(`Would send SMS to: ${phone}`);
+            console.log(`Reset code: ${resetCode}`);
+            console.log('===============================================');
+            
+            res.status(200).json({
+                status: 'success',
+                message: 'Reset code logged to console (development mode)',
+                resetCode: resetCode // Only include in development!
+            });
+            return;
+        }
+        
+        // In production, send actual SMS
+        await sendSMS({
+            to: phone,
+            message: `Your password reset code is ${resetCode}. This code will expire in 10 minutes.`
+        });
+        
+        res.status(200).json({
+            status: 'success',
+            message: 'Reset code sent to your phone'
+        });
+    } catch (err) {
+        // If error sending SMS, reset the passwordResetToken and passwordResetExpires
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save({ validateBeforeSave: false });
+        
+        return next(new ApiError('Error sending SMS. Please try again later.', 500));
+    }
 });
 
 // Verify reset code
 exports.verifyResetCode = asyncHandler(async (req, res, next) => {
     const { resetCode } = req.body;
     
-    // 1) Check if reset code exists and is not expired
+    // Hash the reset code to compare with the stored hashed token
+    const hashedResetCode = crypto
+        .createHash('sha256')
+        .update(resetCode.toString())
+        .digest('hex');
+    
+    // Find user with matching hashed reset code that hasn't expired
     const user = await User.findOne({
-        passwordResetToken: resetCode,
+        passwordResetToken: hashedResetCode,
         passwordResetExpires: { $gt: Date.now() }
     });
     
@@ -123,7 +175,6 @@ exports.verifyResetCode = asyncHandler(async (req, res, next) => {
         status: 'success',
         message: 'Reset code is valid'
     });
-    
 });
 
 // Reset password
@@ -157,13 +208,78 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
 // Logout user
 exports.logout = asyncHandler(async (req, res, next) => {
     // 1) Clear token from client
-    res.clearCookie('jwt');
+    res.clearCookie('token');
     
-
     // 2) Send response
     res.status(200).json({
         status: 'success',
         message: 'Logged out successfully'
-    });
+    }); 
     
+});
+
+// make sure user is logged in
+exports.protect = asyncHandler(async (req, res, next) => {
+    // 1) Check if token exists, if exists get it
+    let token;
+    if (req.headers.token) {
+        token = req.headers.token.split(' ')[1];
+    }
+    
+    if (!token) {
+        return next(new ApiError('You are not logged in. Please login to access this route', 401));
+    }
+    
+    // 2) Verify token (no change happens, expired token)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // 3) Check if user exists
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+        return next(new ApiError('The user belonging to this token no longer exists', 401));
+    }
+    
+    // 4) Check if user changed password after token was issued
+    if (currentUser.changedPasswordAfter && typeof currentUser.changedPasswordAfter === 'function') {
+        if (currentUser.changedPasswordAfter(decoded.iat)) {
+            return next(new ApiError('User recently changed password! Please login again', 401));
+        }
+    }
+    
+    // 5) Grant access to protected route
+    req.user = currentUser;
+    next();
+});
+
+// Authorization (user role)
+exports.allowedTo = (...roles) => 
+    asyncHandler(async (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return next(new ApiError('You are not allowed to access this route', 403));
+        }
+        next();
+    });
+
+// Google OAuth callback
+exports.googleCallback = asyncHandler(async (req, res) => {
+    // User is already authenticated by passport
+    const token = createToken(req.user._id);
+    
+    res.status(200).json({
+        status: 'success',
+        data: req.user,
+        token
+    });
+});
+
+// Facebook OAuth callback
+exports.facebookCallback = asyncHandler(async (req, res) => {
+    // User is already authenticated by passport
+    const token = createToken(req.user._id);
+    
+    res.status(200).json({
+        status: 'success',
+        data: req.user,
+        token
+    });
 });

@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Schema
 const userSchema = new mongoose.Schema(
     {
         name: {
@@ -45,11 +44,18 @@ const userSchema = new mongoose.Schema(
         passwordResetExpires: Date,
         role: {
             type: String,
-            enum: ['user', 'admin'],
+            enum: ['user', 'manager','admin'],
             default: 'user',
         },
         phone: {
             type: String,
+            validate: {
+                validator: function(v) {
+                    // Validate E.164 format
+                    return /^\+[1-9]\d{1,14}$/.test(v);
+                },
+                message: props => `${props.value} is not a valid phone number in E.164 format!`
+            }
         },
         image: {
             type: String,
@@ -59,7 +65,13 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: true
         },
-        deactivatedAt: Date
+        deactivatedAt: Date,
+        googleId: {
+            type: String,
+        },
+        facebookId: {
+            type: String,
+        },
     },
     {
         timestamps: true,
@@ -68,8 +80,8 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-// Document middleware: runs before .save() and .create()
-userSchema.pre('save', async function(next) {
+// Document middleware: runs before .save() and .create(), but not on .update()
+userSchema.pre('save', async function(next) { // .save() and .create()
     // Only run this function if password was modified
     if (!this.isModified('password')) return next();
     
@@ -83,12 +95,26 @@ userSchema.pre('save', async function(next) {
 });
 
 // Update passwordChangedAt property when password is changed
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function(next) { // .save() and .create()
     if (!this.isModified('password') || this.isNew) return next();
     
     // Set passwordChangedAt to current time minus 1 second
     // This ensures the token is created after the password has been changed
     this.passwordChangedAt = Date.now() - 1000;
+    next();
+});
+
+// Format phone to E.164 if it's not already
+userSchema.pre('save', function(next) {
+    // Only run this function if phone was modified
+    if (!this.isModified('phone')) return next();
+    
+    // Format phone to E.164 if it's not already
+    if (this.phone && !this.phone.startsWith('+')) {
+        // Simple formatting - you might want to use the utility function instead
+        this.phone = '+' + this.phone.replace(/[^\d]/g, '');
+    }
+    
     next();
 });
 

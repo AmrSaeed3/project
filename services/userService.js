@@ -131,8 +131,9 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
         return next(new ApiError('New password must be different from current password', 400));
     }
     
-    // 4) Update password
+    // 4) Update password and set passwordChangedAt to current time
     user.password = req.body.password;
+    user.passwordChangedAt = Date.now();
     
     // 5) Save user (this will trigger the pre-save middleware to hash the password)
     await user.save();

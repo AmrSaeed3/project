@@ -2,6 +2,7 @@ const {check} = require('express-validator');
 const validatorMiddleware = require('../../middleware/validatorMiddleware');
 const slugify = require("slugify");
 const Category = require("../../models/categoryModel");
+const subCategoryModel = require('../../models/subCategoryModel');
 
 
 exports.createSubCategoryValidator = [
@@ -13,7 +14,16 @@ exports.createSubCategoryValidator = [
         .custom((val, { req }) => {
             req.body.slug = slugify(val);
             return true;
-        }),
+        })
+        .custom(async (val, { req }) => {
+                    // Check if subCategory name is unique
+                    const subCategory = await subCategoryModel.findOne({ name: val });
+                    if (subCategory) {
+                        throw new Error('subCategory name must be unique');
+                    }
+                    req.body.slug = slugify(val);
+                    return true;
+                }),
     check('category')
         .notEmpty()
         .withMessage('category id required')

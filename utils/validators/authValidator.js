@@ -57,12 +57,18 @@ exports.loginUserValidator = [
 ];
 
 exports.forgotPasswordValidator = [
-    check('email')
+    check('phone')
         .notEmpty()
-        .withMessage('Email address is required')
-        .isEmail()
-        .withMessage('Invalid email address format'),
-
+        .withMessage('Phone number is required')
+        .custom((value) => {
+            // Basic E.164 format validation
+            const e164Regex = /^\+[1-9]\d{1,14}$/;
+            
+            if (!e164Regex.test(value)) {
+                throw new Error('Phone number must be in E.164 format (e.g., +201234567890)');
+            }
+            return true;
+        }),
     validatorMiddleware,
 ];
 

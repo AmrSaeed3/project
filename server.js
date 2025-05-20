@@ -1,12 +1,27 @@
-const path = require('path')
+const path = require('path');
+const express = require('express');
+const dotenv = require('dotenv');
+const morgan = require('morgan');
+const session = require('express-session');
+const fs = require('fs');
 
-const express = require ('express');
-const dotenv = require ('dotenv');
-const morgan = require ('morgan');
+// Try loading from config.env first, then fall back to .env
+if (fs.existsSync('config.env')) {
+  dotenv.config({ path: 'config.env' });
+  console.log('Loaded environment variables from config.env');
+} else if (fs.existsSync('.env')) {
+  dotenv.config();
+  console.log('Loaded environment variables from .env');
+} else {
+  console.warn('No environment file found. Using system environment variables.');
+}
 
-dotenv.config({path:'config.env'});
-const ApiError = require ('./utils/apiError');
-const globalError = require ('./middleware/errorMiddleware');
+// Now require passport after environment variables are loaded
+const passport = require('./config/passport');
+
+// Rest of your imports
+const ApiError = require('./utils/apiError');
+const globalError = require('./middleware/errorMiddleware');
 const CategoryRoute = require("./routes/categoryRoute")
 const SubCategoryRoute = require("./routes/subCategoryRoute")
 const BrandRoute = require("./routes/brandRoute")
@@ -16,15 +31,37 @@ const AuthRoute = require("./routes/authRoute")
 const dbConection = require ('./config/database');
 
 
-// db
+// db connection
 dbConection();
 
 // express app
 const app = express();
 
-// middlwares
+// middlewares
 app.use(express.json());
-app.use(express.static(path.join(__dirname,'uploads')));
+app.use(express.static(path.join(__dirname, 'uploads')));
+
+// Add debugging middleware to check environment variables
+app.use((req, res, next) => {
+  console.log('Environment variables check:');
+  console.log('GOOGLE_CLIENT_ID exists:', !!process.env.GOOGLE_CLIENT_ID);
+  console.log('GOOGLE_CLIENT_SECRET exists:', !!process.env.GOOGLE_CLIENT_SECRET);
+  console.log('FACEBOOK_APP_ID exists:', !!process.env.FACEBOOK_APP_ID);
+  console.log('FACEBOOK_APP_SECRET exists:', !!process.env.FACEBOOK_APP_SECRET);
+  next();
+});
+
+// Session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+// Initialize passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 const NODE_ENV = process.env.NODE_ENV;
 if ( NODE_ENV === 'development'){

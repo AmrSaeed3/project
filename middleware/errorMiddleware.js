@@ -1,12 +1,23 @@
+const ApiError = require('../utils/apiError');
+
+const handleJwtInvalidSignature = ()=> new ApiError('Invalid token. Please login again.', 401);
+const handleJwtexpired = ()=> new ApiError('Your token has expired. Please login again.', 401);
+
 const globalError = (err, req, res, next) => { 
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';
-    process.env.NODE_ENV === 'development' ? sendErrorDev(err, res) : sendErrorProd(err, res);
+    if(process.env.NODE_ENV === 'development') {
+        return sendErrorDev(err, res) 
+    }else{ 
+        if(err.name === 'JsonWebTokenError') err =handleJwtInvalidSignature();
+        if(err.name === 'TokenExpiredError') err =handleJwtexpired();
+        sendErrorProd(err, res);
+    }
 }
 
 
 const  sendErrorDev = (err, res) =>{
-    return res.status(400).json({
+    return res.status(err.statusCode).json({
         status: err.status,
         error: err,
         message: err.message,
@@ -17,7 +28,7 @@ const  sendErrorDev = (err, res) =>{
 
 
 const sendErrorProd = (err, res) => {
-    return res.status(400).json({
+    return res.status(err.statusCode).json({
         status: err.status,
         message: err.message,
     });

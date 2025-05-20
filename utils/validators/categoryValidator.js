@@ -1,15 +1,20 @@
-const {check} = require('express-validator');
+const { check } = require('express-validator');
 const validatorMiddleware = require('../../middleware/validatorMiddleware');
 const slugify = require("slugify");
-
+const Category = require('../../models/categoryModel');
 
 exports.createCategoryValidator = [
     check('name')
         .notEmpty()
         .withMessage('category name required')
-        .isLength({min:3,max:23})
+        .isLength({ min: 3, max: 23 })
         .withMessage('category name must be between 3 and 23 characters')
-        .custom((val, { req }) => {
+        .custom(async (val, { req }) => {
+            // Check if category name is unique
+            const category = await Category.findOne({ name: val });
+            if (category) {
+                throw new Error('category name must be unique');
+            }
             req.body.slug = slugify(val);
             return true;
         }),
