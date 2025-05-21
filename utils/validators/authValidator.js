@@ -17,7 +17,7 @@ exports.signupUserValidator = [
         .notEmpty()
         .withMessage('Email address is required')
         .isEmail()
-        .withMessage('Invalid email address format')
+        .withMessage('Please provide a valid email address')
         .custom(async (val) => {
             const user = await User.findOne({ email: val });
             if (user) {
@@ -43,7 +43,7 @@ exports.loginUserValidator = [
         .notEmpty()
         .withMessage('Email address is required')
         .isEmail()
-        .withMessage('Invalid email address format'),
+        .withMessage('Please provide a valid email address'),
 
     check('password')
         .notEmpty()
@@ -57,18 +57,11 @@ exports.loginUserValidator = [
 ];
 
 exports.forgotPasswordValidator = [
-    check('phone')
+    check('email')
         .notEmpty()
-        .withMessage('Phone number is required')
-        .custom((value) => {
-            // Basic E.164 format validation
-            const e164Regex = /^\+[1-9]\d{1,14}$/;
-            
-            if (!e164Regex.test(value)) {
-                throw new Error('Phone number must be in E.164 format (e.g., +201234567890)');
-            }
-            return true;
-        }),
+        .withMessage('Email address is required')
+        .isEmail()
+        .withMessage('Please provide a valid email address'),
     validatorMiddleware,
 ];
 

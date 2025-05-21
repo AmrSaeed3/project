@@ -16,9 +16,6 @@ if (fs.existsSync('config.env')) {
   console.warn('No environment file found. Using system environment variables.');
 }
 
-// Now require passport after environment variables are loaded
-const passport = require('./config/passport');
-
 // Rest of your imports
 const ApiError = require('./utils/apiError');
 const globalError = require('./middleware/errorMiddleware');
@@ -30,7 +27,6 @@ const UserRoute = require("./routes/userRoute")
 const AuthRoute = require("./routes/authRoute")
 const dbConection = require ('./config/database');
 
-
 // db connection
 dbConection();
 
@@ -41,16 +37,6 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'uploads')));
 
-// Add debugging middleware to check environment variables
-app.use((req, res, next) => {
-  console.log('Environment variables check:');
-  console.log('GOOGLE_CLIENT_ID exists:', !!process.env.GOOGLE_CLIENT_ID);
-  console.log('GOOGLE_CLIENT_SECRET exists:', !!process.env.GOOGLE_CLIENT_SECRET);
-  console.log('FACEBOOK_APP_ID exists:', !!process.env.FACEBOOK_APP_ID);
-  console.log('FACEBOOK_APP_SECRET exists:', !!process.env.FACEBOOK_APP_SECRET);
-  next();
-});
-
 // Session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
@@ -59,13 +45,9 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-// Initialize passport
-app.use(passport.initialize());
-app.use(passport.session());
-
 const NODE_ENV = process.env.NODE_ENV;
-if ( NODE_ENV === 'development'){
-    app.use (morgan('dev'))
+if (NODE_ENV === 'development'){
+    app.use(morgan('dev'))
     console.log(`mode ${NODE_ENV}`)
 }
 
@@ -76,15 +58,14 @@ app.use('/api/v1/brand', BrandRoute);
 app.use('/api/v1/products', ProductRoute);
 app.use('/api/v1/users', UserRoute);
 app.use('/api/v1/auth', AuthRoute);
+
 // 404 handler
 app.all('*', (req, res, next) => { 
     next(new ApiError(`Can't find this route: ${req.originalUrl}`, 404));
 });
 
-
 // global error handler
 app.use(globalError);
-
 
 // server
 const PORT = process.env.PORT || 8000;

@@ -3,8 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/apiError');
-const sendSMS = require('../utils/sendSMS');
-const { formatToE164, isValidE164 } = require('../utils/phoneFormatter');
+const sendEmail = require('../utils/sendEmail');
 const User = require('../models/userModel');
 
 const createToken = (id) => {
@@ -79,27 +78,19 @@ exports.loginUser = asyncHandler(async (req, res, next) => {
     
 });
 
-// Forgot password
+// Forgot password with email verification
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
-    let { phone } = req.body;
+    const { email } = req.body;
     
-    // 1) Check if phone exists
-    if (!phone) {
-        return next(new ApiError('Please provide your phone number', 400));
+    // 1) Check if email exists
+    if (!email) {
+        return next(new ApiError('Please provide your email address', 400));
     }
     
-    // Format phone to E.164 if it's not already
-    if (!isValidE164(phone)) {
-        phone = formatToE164(phone);
-        if (!isValidE164(phone)) {
-            return next(new ApiError('Invalid phone number format. Please provide a valid phone number.', 400));
-        }
-    }
-    
-    // 2) Check if user exists with this phone number
-    const user = await User.findOne({ phone });
+    // 2) Check if user exists with this email
+    const user = await User.findOne({ email });
     if (!user) {
-        return next(new ApiError('There is no user with this phone number', 404));
+        return next(new ApiError('There is no user with this email address', 404));
     }
     
     // 3) Generate random reset code
@@ -114,40 +105,51 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
     user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save({ validateBeforeSave: false });
 
+
+    
+    // Send email with reset code
     try {
-        // In development, we can skip actual SMS sending
-        if (process.env.NODE_ENV === 'development' && process.env.SMS_PROVIDER === 'log') {
-            console.log('==== DEVELOPMENT MODE: SMS NOT ACTUALLY SENT ====');
-            console.log(`Would send SMS to: ${phone}`);
-            console.log(`Reset code: ${resetCode}`);
-            console.log('===============================================');
-            
-            res.status(200).json({
-                status: 'success',
-                message: 'Reset code logged to console (development mode)',
-                resetCode: resetCode // Only include in development!
-            });
-            return;
-        }
-        
-        // In production, send actual SMS
-        await sendSMS({
-            to: phone,
-            message: `Your password reset code is ${resetCode}. This code will expire in 10 minutes.`
-        });
-        
-        res.status(200).json({
-            status: 'success',
-            message: 'Reset code sent to your phone'
-        });
-    } catch (err) {
-        // If error sending SMS, reset the passwordResetToken and passwordResetExpires
+    await sendEmail({
+        email: user.email,
+        subject: 'Your Password Reset Code (valid for 10 min)',
+        message: `Verification code`, // You can remove or update this if not used in your sendEmail function
+        html: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px; background: #fafbfc;">
+            <h2 style="color: #2d3748; text-align: center;">Password Reset Request</h2>
+            <p style="font-size: 16px; color: #4a5568;">
+                Hello,<br>
+                You requested to reset your password. Please use the verification code below:
+            </p>
+            <div style="text-align: center; margin: 24px 0;">
+                <span style="display: inline-block; font-size: 32px; letter-spacing: 6px; color: #3182ce; font-weight: bold; background: #e6f7ff; padding: 12px 32px; border-radius: 6px;">
+                ${resetCode}
+                </span>
+            </div>
+            <p style="font-size: 15px; color: #718096;">
+                This code will expire in <strong>10 minutes</strong>.<br>
+                If you did not request this, please ignore this email.
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+            <p style="font-size: 13px; color: #a0aec0; text-align: center;">
+                &copy; ${new Date().getFullYear()} Your App Name
+            </p>
+        </div>
+        `
+    });
+    }catch (error) {
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
-        await user.save({ validateBeforeSave: false });
         
-        return next(new ApiError('Error sending SMS. Please try again later.', 500));
+        await user.save({ validateBeforeSave: undefined });
+        
+        return next(new ApiError('There was an error sending the email. Try again later!', 500));
     }
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Reset code sent to your email'
+    });
+
 });
 
 // Verify reset code
@@ -170,7 +172,9 @@ exports.verifyResetCode = asyncHandler(async (req, res, next) => {
         return next(new ApiError('Invalid or expired reset code', 400));
     }
     
-    // 2) Send response
+    await user.save({ validateBeforeSave: true });
+
+    // 3) Send response
     res.status(200).json({
         status: 'success',
         message: 'Reset code is valid'
@@ -197,6 +201,7 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
     user.passwordResetExpires = undefined;
     await user.save();
     
+
     // 3) Send response
     res.status(200).json({
         status: 'success',
@@ -258,7 +263,7 @@ exports.allowedTo = (...roles) =>
             return next(new ApiError('You are not allowed to access this route', 403));
         }
         next();
-    });
+});
 
 // Google OAuth callback
 exports.googleCallback = asyncHandler(async (req, res) => {
