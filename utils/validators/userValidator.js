@@ -1,5 +1,4 @@
 const { check } = require('express-validator');
-const bcrypt = require('bcryptjs');
 const validatorMiddleware = require('../../middleware/validatorMiddleware');
 const User = require('../../models/userModel');
 const slugify = require('slugify');
@@ -152,7 +151,7 @@ exports.changeUserPasswordValidator = [
         .notEmpty()
         .withMessage('Current password is required'),
 
-    check('password')
+    check('newPassword')
         .notEmpty()
         .withMessage('New password is required')
         .isLength({ min: 8 })
@@ -161,7 +160,7 @@ exports.changeUserPasswordValidator = [
         .withMessage('Password cannot exceed 32 characters')
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
         .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
-        .custom(async (val, { req }) => {
+        .custom((val, { req }) => {
             // Ensure new password is different from current password
             if (req.body.currentPassword === val) {
                 throw new Error('New password must be different from current password');
@@ -173,8 +172,81 @@ exports.changeUserPasswordValidator = [
     validatorMiddleware,
 ];
 
-// Add a specific validator for the /me route
-exports.getMeValidator = [
-    // No ID validation needed for /me route
+
+// Validator for logged-in user updating their own profile
+exports.updateLoggedUserValidator = [
+    check('name')
+        .optional()
+        .isLength({ min: 3 })
+        .withMessage('Name must be at least 3 characters long')
+        .isLength({ max: 32 })
+        .withMessage('Name cannot exceed 32 characters')
+        .matches(/^[a-zA-Z\s]+$/)
+        .withMessage('Name must contain only letters and spaces'),
+
+    check('email')
+        .optional()
+        .isEmail()
+        .withMessage('Invalid email address format')
+        .custom(async (val, { req }) => {
+            const user = await User.findOne({ email: val });
+            if (user && user._id.toString() !== req.user.id) {
+                throw new Error('Email already in use');
+            }
+            return true;
+        }),
+
+    check('phone')
+        .optional()
+        .isMobilePhone(['ar-EG'])
+        .withMessage('Invalid phone number format, only Egyptian numbers is supported')
+        .isLength({ min: 11, max: 13 })
+        .withMessage('Phone number must be between 11 and 13 digits'),
+        
+    // Explicitly reject password fields in profile updates
+    check('password')
+        .not()
+        .exists()
+        .withMessage('This route is not for password updates. Please use /changeMyPassword'),
+        
+    check('role')
+        .not()
+        .exists()
+        .withMessage('You cannot change your role'),
+
+    validatorMiddleware,
+];
+
+// Validator for logged-in user changing their own password
+exports.updateLoggedUserPasswordValidator = [
+    check('currentPassword')
+        .notEmpty()
+        .withMessage('Current password is required'),
+
+    check('newPassword')
+        .notEmpty()
+        .withMessage('New password is required')
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters long')
+        .isLength({ max: 32 })
+        .withMessage('Password cannot exceed 32 characters')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
+        .custom((val, { req }) => {
+            // Ensure new password is different from current password
+            if (req.body.currentPassword === val) {
+                throw new Error('New password must be different from current password');
+            }
+            return true;
+        }),
+
+    validatorMiddleware,
+];
+
+// Validator for deleting logged-in user's account
+exports.deleteLoggedUserValidator = [
+    // You could add confirmation checks here if needed
+    // For example, requiring the user to type their password
+    
     validatorMiddleware,
 ];

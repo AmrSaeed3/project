@@ -4,7 +4,11 @@ const {
     updateUserValidator,
     getUserValidator,
     toggleUserActiveValidator,
-    changeUserPasswordValidator
+    changeUserPasswordValidator,
+    
+    updateLoggedUserValidator,
+    updateLoggedUserPasswordValidator,
+    deleteLoggedUserValidator
 } = require('../utils/validators/userValidator');
 
 const { protect, allowedTo } = require('../services/auth/index');
@@ -28,10 +32,23 @@ const router = express.Router();
 
 // IMPORTANT: Define specific routes before parameterized routes
 // User profile routes - accessible to any logged in user
-router.get('/me', protect, getLoggedUserData);
-router.put('/updateMe', protect, uploadUserImage, resizeUserImage, updateLoggedUserData);
-router.put('/changeMyPassword', protect, updateLoggedUserPassword);
-router.delete('/deleteMe', protect, deleteLoggedUserAccount);
+router.get('/me', 
+        protect,
+        getLoggedUserData);
+router.put('/updateMe', 
+        protect, 
+        uploadUserImage, 
+        resizeUserImage,
+        updateLoggedUserValidator, 
+        updateLoggedUserData);
+router.put('/changeMyPassword', 
+        protect,
+        updateLoggedUserPasswordValidator, 
+        updateLoggedUserPassword);
+router.delete('/deleteMe', 
+        protect,
+        deleteLoggedUserValidator, 
+        deleteLoggedUserAccount);
 
 // Admin only routes - require admin role
 router.route('/')

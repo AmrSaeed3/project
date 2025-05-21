@@ -40,7 +40,12 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
             email: user.email,
             subject: 'Your Password Reset Code (valid for 10 min)',
             message: `Verification code`, // You can remove or update this if not used in your sendEmail function
-            html: `
+            html: `    <div>
+        <img 
+            src="https://res.cloudinary.com/dvow5shsk/image/upload/v1747844251/%D8%B9%D9%88%D9%88%D9%88_scpvia.png" 
+            alt="Profile Photo" 
+            style="width: 100px; border-radius: 50%;"
+        >
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 24px; background: #fafbfc;">
             <h2 style="color: #2d3748; text-align: center;">Password Reset Request</h2>
             <p style="font-size: 16px; color: #4a5568;">
