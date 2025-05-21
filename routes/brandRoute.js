@@ -7,7 +7,7 @@ const {
     deleteBrandValidator
 } = require('../utils/validators/brandValidator');
 
-const authorization = require('../services/authService');
+const { protect, allowedTo } = require('../services/auth');
 
 const { createBrand,
     getBrand,
@@ -22,20 +22,20 @@ const router = express.Router();
 router.route('/')
     .get(getBrand)
     .post(
-        authorization.protect,
-        authorization.allowedTo('admin', 'manager'),
+        protect,
+        allowedTo('admin', 'manager'),
         createBrandValidator, createBrand);
 
 // /api/Brand/:id
 router.route('/:id')
     .get(getBrandValidator, getBrandByID)
     .put(
-        authorization.protect,
-        authorization.allowedTo('admin', 'manager'),
+        protect,
+        allowedTo('admin', 'manager'),
         updateBrandValidator, updateBrandByID)
     .delete(
-        authorization.protect,
-        authorization.allowedTo('admin'),
+        protect,
+        allowedTo('admin'),
         deleteBrandValidator, deleteBrandByID);
 
 module.exports = router;

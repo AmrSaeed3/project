@@ -7,7 +7,7 @@ const {
     deleteProductValidator
 } = require('../utils/validators/productValidator');
 
-const authorization = require('../services/authService');
+const { protect, allowedTo } = require('../services/auth');
 
 const {
     createProduct,
@@ -26,8 +26,8 @@ const router = express.Router();
 router.route('/')
     .get(getProduct)
     .post(
-        authorization.protect,
-        authorization.allowedTo('admin', 'manager'),
+        protect,
+        allowedTo('admin', 'manager'),
         uploadProductImages,
         resizeProductImages,
         validateProductImages,
@@ -39,16 +39,16 @@ router.route('/')
 router.route('/:id')
     .get(getProductValidator, getProductByID)
     .put(
-        authorization.protect,
-        authorization.allowedTo('admin', 'manager'),
+        protect,
+        allowedTo('admin', 'manager'),
         uploadProductImages,
         resizeProductImages,
         updateProductValidator,
         updateProductByID
     )
     .delete(
-        authorization.protect,
-        authorization.allowedTo('admin', 'manager'),
+        protect,
+        allowedTo('admin', 'manager'),
         deleteProductValidator, deleteProductByID);
 
 module.exports = router;

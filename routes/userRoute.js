@@ -7,7 +7,7 @@ const {
     changeUserPasswordValidator
 } = require('../utils/validators/userValidator');
 
-const authorization = require('../services/authService');
+const { protect, allowedTo } = require('../services/auth');
 
 const {
     createUser,
@@ -25,12 +25,12 @@ const router = express.Router();
 // /api/v1/users
 router.route('/')
     .get(
-        authorization.protect,
-        authorization.allowedTo('admin'),
+        protect,
+        allowedTo('admin'),
         getUser)
     .post(
-        authorization.protect,
-        authorization.allowedTo('admin'),
+        protect,
+        allowedTo('admin'),
         uploadUserImage,
         resizeUserImage,
         createUserValidator,
@@ -40,12 +40,12 @@ router.route('/')
 // /api/v1/users/:id
 router.route('/:id')
     .get(
-        authorization.protect,
-        authorization.allowedTo('admin'),
+        protect,
+        allowedTo('admin'),
         getUserValidator, getUserByID)
     .put(
-        authorization.protect,
-        authorization.allowedTo('admin'),
+        protect,
+        allowedTo('admin'),
         uploadUserImage,
         resizeUserImage,
         updateUserValidator,
@@ -55,8 +55,8 @@ router.route('/:id')
 // /api/v1/users/toggleActive/:id
 router.patch(
     '/toggleActive/:id',
-    authorization.protect,
-    authorization.allowedTo('admin'),
+    protect,
+    allowedTo('admin'),
     toggleUserActiveValidator,
     toggleUserActiveStatus
 );
@@ -64,8 +64,8 @@ router.patch(
 // /api/v1/users/changePassword/:id
 router.put(
     '/changePassword/:id',
-    authorization.protect,
-    authorization.allowedTo('admin'),
+    protect,
+    allowedTo('admin'),
     changeUserPasswordValidator,
     changeUserPassword
 );

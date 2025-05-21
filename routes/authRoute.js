@@ -9,16 +9,16 @@ const {
     resetPasswordValidator
 } = require('../utils/validators/authValidator');
 
-const {
-    signupUser,
-    loginUser,
-    forgotPassword,
-    verifyResetCode,
-    resetPassword,
-    logout,
-    googleCallback,
-    facebookCallback
-} = require('../services/authService');
+
+const signupUser  = require('../services/auth/signupService')
+const loginUser = require('../services/auth/loginService')
+const forgotPassword = require('../services/auth/')
+const verifyResetCode = require('../services/auth/')
+const resetPassword = require('../services/auth/')
+const logout = require('../services/auth/')
+const googleCallback = require('../services/auth/')
+const facebookCallback = require('../services/auth/')
+
 
 const router = express.Router();
 
