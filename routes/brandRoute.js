@@ -7,7 +7,7 @@ const {
     deleteBrandValidator
 } = require('../utils/validators/brandValidator');
 
-const { protect, allowedTo } = require('../services/auth');
+const { protect, allowedTo } = require('../services/auth/index');
 
 const { createBrand,
     getBrand,

@@ -45,7 +45,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
             <h2 style="color: #2d3748; text-align: center;">Password Reset Request</h2>
             <p style="font-size: 16px; color: #4a5568;">
                 Hello,<br>
-                You requested to reset your password. Please use the verification code below:
+                You requested to reset your password.hf,Please use the verification code below:
             </p>
             <div style="text-align: center; margin: 24px 0;">
                 <span style="display: inline-block; font-size: 32px; letter-spacing: 6px; color: #3182ce; font-weight: bold; background: #e6f7ff; padding: 12px 32px; border-radius: 6px;">
@@ -58,7 +58,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
             </p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
             <p style="font-size: 13px; color: #a0aec0; text-align: center;">
-                &copy; ${new Date().getFullYear()} Your App Name
+                &copy; ${new Date().getFullYear()} meng
             </p>
         </div>
         `

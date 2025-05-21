@@ -9,16 +9,18 @@ const {
     resetPasswordValidator
 } = require('../utils/validators/authValidator');
 
-
-const signupUser  = require('../services/auth/signupService')
-const loginUser = require('../services/auth/loginService')
-const forgotPassword = require('../services/auth/')
-const verifyResetCode = require('../services/auth/')
-const resetPassword = require('../services/auth/')
-const logout = require('../services/auth/')
-const googleCallback = require('../services/auth/')
-const facebookCallback = require('../services/auth/')
-
+const { 
+    signupUser,
+    loginUser,
+    forgotPassword,
+    verifyResetCode,
+    resetPassword,
+    logout,
+    googleLogin,
+    googleCallback,
+    facebookLogin,
+    facebookCallback
+} = require('../services/auth/index');
 
 const router = express.Router();
 
@@ -35,18 +37,66 @@ router.put('/resetPassword', resetPasswordValidator, resetPassword);
 router.get('/logout', logout);
 
 // Google OAuth routes
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/login' }),
-    googleCallback
-);
+router.get('/google', googleLogin);
+router.get('/google/callback', googleCallback);
 
 // Facebook OAuth routes
-router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
-router.get('/facebook/callback',
-    passport.authenticate('facebook', { failureRedirect: '/login' }),
-    facebookCallback
-);
+// Check if facebookLogin is defined before using it
+router.get('/facebook', facebookLogin || ((req, res) => {
+    res.status(501).send('Facebook login not implemented');
+}));
+
+// Check if facebookCallback is defined before using it
+router.get('/facebook/callback', facebookCallback || ((req, res) => {
+    res.status(501).send('Facebook callback not implemented');
+}));
+
+// Check if token is saved in user document
+router.get('/verify-token-saved', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1] || 
+                 req.headers.token?.split(' ')[1] || 
+                 req.cookies?.jwt;
+    
+    if (!token) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'No token provided'
+      });
+    }
+    
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Find user with this ID and check if token is saved
+    const user = await User.findById(decoded.id).select('+authToken');
+    
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'User not found'
+      });
+    }
+    
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        tokenSaved: user.authToken === token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+});
 
 module.exports = router;
 

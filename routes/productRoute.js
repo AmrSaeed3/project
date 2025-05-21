@@ -7,7 +7,7 @@ const {
     deleteProductValidator
 } = require('../utils/validators/productValidator');
 
-const { protect, allowedTo } = require('../services/auth');
+const { protect, allowedTo } = require('../services/auth/index');
 
 const {
     createProduct,

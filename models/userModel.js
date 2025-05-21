@@ -24,9 +24,12 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: [true, 'user password required'],
-            minlength: [8, 'Password must be at least 8 characters'],
-            select: false // Don't return password in query results
+            required: function() {
+                // Only require password if not using social login
+                return !this.googleId && !this.facebookId;
+            },
+            minlength: [8, 'Password must be at least 8 characters long'],
+            select: false
         },
         // passwordConfirm: {
         //     type: String,
@@ -69,6 +72,9 @@ const userSchema = new mongoose.Schema(
         facebookId: {
             type: String,
         },
+        authToken: {
+            type: String,
+        },
     },
     {
         timestamps: true,
@@ -77,17 +83,13 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-// Document middleware: runs before .save() and .create(), but not on .update()
-userSchema.pre('save', async function (next) { // .save() and .create()
-    // Only run this function if password was modified
-    if (!this.isModified('password')) return next();
-
+// Pre-save hook to hash password
+userSchema.pre('save', async function(next) {
+    // Only hash the password if it's modified (or new)
+    if (!this.isModified('password') || !this.password) return next();
+    
     // Hash the password with cost of 12
     this.password = await bcrypt.hash(this.password, 12);
-
-    // Delete passwordConfirm field
-    this.passwordConfirm = undefined;
-
     next();
 });
 

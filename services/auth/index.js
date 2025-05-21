@@ -7,6 +7,23 @@ const socialAuthService = require('./socialAuthService');
 const logoutService = require('./logoutService');
 const tokenService = require('./tokenService');
 
+// Check if all required functions exist in socialAuthService
+const googleLogin = socialAuthService.googleLogin || ((req, res) => {
+    res.status(501).send('Google login not implemented');
+});
+
+const googleCallback = socialAuthService.googleCallback || ((req, res) => {
+    res.status(501).send('Google callback not implemented');
+});
+
+const facebookLogin = socialAuthService.facebookLogin || ((req, res) => {
+    res.status(501).send('Facebook login not implemented');
+});
+
+const facebookCallback = socialAuthService.facebookCallback || ((req, res) => {
+    res.status(501).send('Facebook callback not implemented');
+});
+
 module.exports = {
     // User registration
     signupUser: signupService.signupUser,
@@ -24,8 +41,10 @@ module.exports = {
     allowedTo: protectService.allowedTo,
     
     // Social authentication
-    googleCallback: socialAuthService.googleCallback,
-    facebookCallback: socialAuthService.facebookCallback,
+    googleLogin,
+    googleCallback,
+    facebookLogin,
+    facebookCallback,
     
     // Logout
     logout: logoutService.logout,

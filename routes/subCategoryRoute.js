@@ -7,7 +7,7 @@ const {
     deleteSubCategoryValidator
 } = require('../utils/validators/subCategoryValidator');
 
-const authorization = require('../services/authService');
+const authorization = require('../services/auth/index');
 
 const {
     createSubCategory,

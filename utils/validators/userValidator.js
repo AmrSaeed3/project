@@ -172,3 +172,9 @@ exports.changeUserPasswordValidator = [
 
     validatorMiddleware,
 ];
+
+// Add a specific validator for the /me route
+exports.getMeValidator = [
+    // No ID validation needed for /me route
+    validatorMiddleware,
+];

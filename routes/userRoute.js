@@ -7,7 +7,7 @@ const {
     changeUserPasswordValidator
 } = require('../utils/validators/userValidator');
 
-const { protect, allowedTo } = require('../services/auth');
+const { protect, allowedTo } = require('../services/auth/index');
 
 const {
     createUser,
@@ -17,17 +17,25 @@ const {
     toggleUserActiveStatus,
     uploadUserImage,
     resizeUserImage,
-    changeUserPassword
+    changeUserPassword,
+    getLoggedUserData,
+    updateLoggedUserPassword,
+    updateLoggedUserData,
+    deleteLoggedUserAccount
 } = require("../services/userService");
 
 const router = express.Router();
 
-// /api/v1/users
+// IMPORTANT: Define specific routes before parameterized routes
+// User profile routes - accessible to any logged in user
+router.get('/me', protect, getLoggedUserData);
+router.put('/updateMe', protect, uploadUserImage, resizeUserImage, updateLoggedUserData);
+router.put('/changeMyPassword', protect, updateLoggedUserPassword);
+router.delete('/deleteMe', protect, deleteLoggedUserAccount);
+
+// Admin only routes - require admin role
 router.route('/')
-    .get(
-        protect,
-        allowedTo('admin'),
-        getUser)
+    .get(protect, allowedTo('admin'), getUser)
     .post(
         protect,
         allowedTo('admin'),
@@ -37,12 +45,18 @@ router.route('/')
         createUser
     );
 
-// /api/v1/users/:id
+// Admin route for changing any user's password
+router.put(
+    '/changePassword/:id',
+    protect,
+    allowedTo('admin'),
+    changeUserPasswordValidator,
+    changeUserPassword
+);
+
+// IMPORTANT: Define parameterized routes after specific routes
 router.route('/:id')
-    .get(
-        protect,
-        allowedTo('admin'),
-        getUserValidator, getUserByID)
+    .get(getUserValidator, getUserByID)
     .put(
         protect,
         allowedTo('admin'),
@@ -52,22 +66,12 @@ router.route('/:id')
         updateUserByID
     );
 
-// /api/v1/users/toggleActive/:id
 router.patch(
     '/toggleActive/:id',
     protect,
     allowedTo('admin'),
     toggleUserActiveValidator,
     toggleUserActiveStatus
-);
-
-// /api/v1/users/changePassword/:id
-router.put(
-    '/changePassword/:id',
-    protect,
-    allowedTo('admin'),
-    changeUserPasswordValidator,
-    changeUserPassword
 );
 
 module.exports = router;

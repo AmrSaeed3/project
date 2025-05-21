@@ -7,7 +7,7 @@ const {
     deletecategoryValidator
 } = require('../utils/validators/categoryValidator');
 
-const { protect, allowedTo } = require('../services/auth');
+const { protect, allowedTo } = require('../services/auth/index');
 
 const { createCategory,
     getCategory,

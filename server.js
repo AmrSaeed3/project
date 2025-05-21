@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const session = require('express-session');
 const fs = require('fs');
+const passport = require('passport');
 
 // Try loading from config.env first, then fall back to .env
 if (fs.existsSync('config.env')) {
@@ -37,13 +38,20 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'uploads')));
 
-// Session middleware
+// Session middleware - MUST be before passport.initialize()
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Require social auth service to set up strategies
+require('./services/auth/socialAuthService');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (NODE_ENV === 'development'){
