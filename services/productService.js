@@ -11,9 +11,9 @@ exports.resizeProductImages = resizeProductImages;
 exports.validateProductImages = (req, res, next) => {
     // For create operations, require imageCover
     if (req.method === 'POST' && (!req.files || !req.files.imageCover)) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             status: 'error',
-            message: 'Product cover image is required' 
+            message: 'Product cover image is required'
         });
     }
     next();
@@ -23,10 +23,12 @@ exports.validateProductImages = (req, res, next) => {
 exports.createProduct = factory.createOne(Product);
 
 // Get all products
-exports.getProduct = factory.getAll(Product);
+exports.getProduct = factory.getAll(Product, 'product');
 
-// Get a single product by ID
-exports.getProductByID = factory.getOne(Product);
+// Get a single product by ID, explicitly populate reviews virtual
+exports.getProductByID = factory.getOne(Product, [
+    { path: 'reviews', select: 'review ratings user createdAt' }
+]);
 
 // Update a product by ID
 exports.updateProductByID = factory.updateOne(Product);

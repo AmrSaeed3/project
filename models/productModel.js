@@ -1,12 +1,13 @@
 const mongoose = require("mongoose");
+// const Reviews = require('./reviewModel');
 
 const productSchema = new mongoose.Schema(
     {
         name: {
             type: String,
             required: [true, 'product name required'],
-            minlength:[3,'too short product name'],
-            maxlength:[100,'too long product name'],
+            minlength: [3, 'too short product name'],
+            maxlength: [100, 'too long product name'],
             trim: true,
         },
         slug: {
@@ -17,13 +18,12 @@ const productSchema = new mongoose.Schema(
         description: {
             type: String,
             required: [true, 'product description'],
-            minlength:[20,'too short product description'],
+            minlength: [20, 'too short product description'],
         },
         quantity: {
             type: Number,
             required: [true, 'product quantity required'],
             min: [0, 'product quantity must be positive'],
-            
         },
         sold: {
             type: Number,
@@ -33,20 +33,20 @@ const productSchema = new mongoose.Schema(
             type: Number,
             required: [true, 'product price required'],
             trim: true,
-            max:[100000,'too long product price'],
+            max: [100000, 'too long product price'],
         },
         priceAfterDiscount: {
             type: Number,
+        },
+        colors: {
+            type: [String],
+            default: [],
         },
         imageCover: {
             type: String,
             required: [true, 'product image cover is required'],
         },
         images: {
-            type: [String],
-            default: [],
-        },
-        colors: {
             type: [String],
             default: [],
         },
@@ -58,73 +58,56 @@ const productSchema = new mongoose.Schema(
         subCategory: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "SubCategory",
-        },],
+        }],
         brand: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Brand", // Ensure this matches the name of the Brand model
+            ref: "Brand",
         },
-        typecategory:{type:String ,            
-            required: [true, 'typecategory name required'],
-            unique: [true, 'Category must be unique'],
-            minlength:[3,'too short typecategory name'],
-            maxlength:[23,'too long typecategory name'],},
-        subcategory1:{type:String ,             
-            required: [true, 'subcategory1 name required'],
-            unique: [true, 'Category must be unique'],
-            minlength:[3,'too short subcategory1 name'],
-            maxlength:[23,'too long subcategory1 name'],},
-        subcategory2:{type:String ,             
-            required: [true, 'subcategory2 name required'],
-            unique: [true, 'Category must be unique'],
-            minlength:[3,'too short subcategory2 name'],
-            maxlength:[23,'too long subcategory2 name'],}, 
         ratingsAverage: {
-        type: Number,
-        min: [1, 'rating must be at least 1'],
-        max: [5, 'rating must be at most 5'],
+            type: Number,
+            min: [1, 'rating must be at least 1'],
+            max: [5, 'rating must be at most 5'],
         },
         ratingsQuantity: {
             type: Number,
             default: 0,
         },
         sizes: {
-            type: Array,
-            default: [], 
-        },
+            type: [String],
+            default: [],
+        }
     },
     {
         timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
     }
 );
+
+// Make sure the ref matches exactly the model name used in reviewModel.js
+productSchema.virtual('reviews', {
+    ref: 'Review', // This should match exactly what's in reviewModel.js
+    foreignField: 'product',
+    localField: '_id',
+}); // Make sure the ref matches exactly the model name used in reviewModel.js
+
+
 productSchema.pre(/^find/, function (next) {
-    
     this.populate({
-        path: "category", // First level: Populate the 'category' field
-        select: "name -_id", // Select only the 'name' field and exclude '_id'
+        path: "category",
+        select: "name -_id",
     })
     .populate({
-        path: "brand", // Second level: Populate the 'brand' field
-        select: "name -_id", // Select only the 'name' field and exclude '_id'
+        path: "brand",
+        select: "name -_id",
     })
     .populate({
-        path: "subCategory", // Third level: Populate the 'subcategory' field
-        select: "name -_id", // Select only the 'name' field and exclude '_id'
-    })
+        path: "subCategory",
+        select: "name -_id",
+    });
+    
+    // Don't populate reviews here, we'll do it explicitly in the controller
     next();
-})
-
-// Remove the setImageURL function since we're storing full URLs now
-// If you want to keep the existing URL transformation logic, you can leave it,
-// but it's not needed if you're storing complete Cloudinary URLs
-
-// Remove these hooks if you're storing complete URLs
-/*
-productSchema.post('init', (doc) => {
-    setImageURL(doc);
 });
 
-productSchema.post('save', (doc) => {
-    setImageURL(doc);
-});
-*/
 module.exports = mongoose.model("Product", productSchema);

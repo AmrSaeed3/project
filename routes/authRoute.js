@@ -55,8 +55,8 @@ router.get('/facebook/callback', facebookCallback || ((req, res) => {
 router.get('/verify-token-saved', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1] || 
-                 req.headers.token?.split(' ')[1] || 
-                 req.cookies?.jwt;
+                req.headers.token?.split(' ')[1] || 
+                req.cookies?.jwt;
     
     if (!token) {
       return res.status(400).json({

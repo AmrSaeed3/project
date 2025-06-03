@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const session = require('express-session');
 const fs = require('fs');
 const passport = require('passport');
+const cookieParser = require('cookie-parser');
 
 // Try loading from config.env first, then fall back to .env
 if (fs.existsSync('config.env')) {
@@ -26,6 +27,7 @@ const BrandRoute = require("./routes/brandRoute")
 const ProductRoute = require("./routes/productRoute")
 const UserRoute = require("./routes/userRoute")
 const AuthRoute = require("./routes/authRoute")
+const ReviewRoute = require("./routes/reviewRoute")
 const dbConection = require ('./config/database');
 
 // db connection
@@ -37,6 +39,7 @@ const app = express();
 // middlewares
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'uploads')));
+app.use(cookieParser());
 
 // Session middleware - MUST be before passport.initialize()
 app.use(session({
@@ -66,6 +69,7 @@ app.use('/api/v1/brand', BrandRoute);
 app.use('/api/v1/products', ProductRoute);
 app.use('/api/v1/users', UserRoute);
 app.use('/api/v1/auth', AuthRoute);
+app.use('/api/v1/reviews', ReviewRoute);
 
 // 404 handler
 app.all('*', (req, res, next) => { 

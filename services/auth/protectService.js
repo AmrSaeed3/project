@@ -7,9 +7,11 @@ const ApiError = require('../../utils/apiError');
 exports.protect = asyncHandler(async (req, res, next) => {
     // 1) Check if token exists, if exists get it from headers or cookies
     let token;
-    if (req.headers.authorization) {
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
-    } else if (req.cookies.jwt) {
+    } else if (req.headers.token && req.headers.token.startsWith('Bearer')) {
+        token = req.headers.token.split(' ')[1];
+    } else if (req.cookies && req.cookies.jwt) {
         token = req.cookies.jwt;
     }
 
@@ -18,7 +20,18 @@ exports.protect = asyncHandler(async (req, res, next) => {
     }
 
     // 2) Verify token (no change happens, expired token) and get user id
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+        if (err.name === 'JsonWebTokenError') {
+            return next(new ApiError('Invalid token. Please login again', 401));
+        }
+        if (err.name === 'TokenExpiredError') {
+            return next(new ApiError('Your token has expired. Please login again', 401));
+        }
+        return next(new ApiError('Authentication error. Please login again', 401));
+    }
 
     // 3) Check if user exists
     const currentUser = await User.findById(decoded.id).select('+authToken');
@@ -35,6 +48,12 @@ exports.protect = asyncHandler(async (req, res, next) => {
 
     // 5) Grant access to protected route
     req.user = currentUser;
+    
+    // Add user ID to body if not present
+    if (!req.body.user && req.method !== 'GET') {
+        req.body.user = currentUser._id;
+    }
+    
     next();
 });
 
