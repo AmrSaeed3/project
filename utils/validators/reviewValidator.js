@@ -1,22 +1,25 @@
-const { check } = require('express-validator');
+const { check, body } = require('express-validator');
 const validatorMiddleware = require('../../middleware/validatorMiddleware');
 const Review = require('../../models/reviewModel');
 const Product = require('../../models/productModel');
 const User = require('../../models/userModel');
+const slugify = require("slugify");
 
 exports.createReviewValidator = [
     check('review')
+        .optional()
         .notEmpty()
         .withMessage('Review cannot be empty'),
-    check('rating')
+    check('ratings')
+        .optional()
         .notEmpty()
-        .withMessage('Rating cannot be empty')
+        .withMessage('Ratings cannot be empty')
         .isNumeric()
-        .withMessage('Rating must be a number')
+        .withMessage('Ratings must be a number')
         .isLength({ min: 1 })
-        .withMessage('Rating must be above or equal 1.0')
+        .withMessage('Ratings must be above or equal 1.0')
         .isLength({ max: 5 })
-        .withMessage('Rating must be below or equal 5.0'),
+        .withMessage('Ratings must be below or equal 5.0'),
     check('user')
         .notEmpty()
         .withMessage('User cannot be empty')
@@ -89,16 +92,16 @@ exports.updateReviewValidator = [
         .optional()
         .notEmpty()
         .withMessage('Review cannot be empty'),
-    check('rating')
+    check('ratings')
         .optional()
         .notEmpty()
-        .withMessage('Rating cannot be empty')
+        .withMessage('Ratings cannot be empty')
         .isNumeric()
-        .withMessage('Rating must be a number')
+        .withMessage('Ratings must be a number')
         .isLength({ min: 1 })
-        .withMessage('Rating must be above or equal 1.0')
+        .withMessage('Ratings must be above or equal 1.0')
         .isLength({ max: 5 })
-        .withMessage('Rating must be below or equal 5.0'),
+        .withMessage('Ratings must be below or equal 5.0'),
     validatorMiddleware,
 ];
 

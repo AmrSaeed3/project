@@ -17,7 +17,8 @@ const {
     deleteProductByID,
     uploadProductImages,
     resizeProductImages,
-    validateProductImages
+    validateProductImages,
+    getSimilarProducts
 } = require("../services/productService");
 
 const router = express.Router();
@@ -34,6 +35,10 @@ router.route('/')
         createProductValidator,
         createProduct
     );
+
+// Add this route to your product routes
+router.get('/:productId/similar', getSimilarProducts);
+
 
 // /api/v1/products/:id
 router.route('/:id')

@@ -1,18 +1,34 @@
 const mongoose = require('mongoose');
 
-const productSimilaritySchema = new mongoose.Schema({
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',  // Make sure this matches your Product model name
-    required: true
-  },
-  similarProducts: [{
-    similarProductId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product'  // Make sure this matches your Product model name
+// Define schema for existing ProductSimilarity collection
+const productSimilaritySchema = new mongoose.Schema(
+    {
+        productId: {
+            type: mongoose.Schema.ObjectId,
+            ref: 'Product',
+            required: true,
+            unique: true
+        },
+        similarProducts: [
+            {
+                similarProductId: {
+                    type: mongoose.Schema.ObjectId,
+                    ref: 'Product'
+                },
+                similarityScore: {
+                    type: Number,
+                    min: 0,
+                    max: 1
+                }
+            }
+        ]
     },
-    similarityScore: Number
-  }]
-});
+    {
+        timestamps: true
+    }
+);
 
-module.exports = mongoose.model('ProductSimilarity', productSimilaritySchema);
+// Create model for existing collection
+const ProductSimilarity = mongoose.model('ProductSimilarity', productSimilaritySchema);
+
+module.exports = ProductSimilarity;

@@ -31,6 +31,9 @@
     "path-to-regexp": "^8.2.0",
     "sharp": "^0.34.1",
     "slugify": "^1.6.6",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "natural": "^6.5.0",
+    "cli-progress": "^3.12.0",
+    "colors": "^1.4.0"
   }
 }
