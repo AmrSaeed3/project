@@ -31,17 +31,6 @@ const userSchema = new mongoose.Schema(
             minlength: [8, 'Password must be at least 8 characters long'],
             select: false
         },
-        // passwordConfirm: {
-        //     type: String,
-        //     // required: [true, 'user passwordConfirm required'],
-        //     validate: {
-        //         // This validator only works on CREATE and SAVE
-        //         validator: function (val) {
-        //             return val === this.password;
-        //         },
-        //         message: 'Passwords do not match'
-        //     }
-        // },
         passwordChangedAt: Date,
         passwordResetToken: String,
         passwordResetExpires: Date,
@@ -53,9 +42,6 @@ const userSchema = new mongoose.Schema(
             type: String,
             enum: ['user', 'manager', 'admin'],
             default: 'user',
-        },
-        phone: {
-            type: String,
         },
         image: {
             type: String,
@@ -75,11 +61,52 @@ const userSchema = new mongoose.Schema(
         authToken: {
             type: String,
         },
+        fullName: { 
+            type: String 
+        },
+        phone: { 
+            type: String 
+        },
+        city: { 
+            type: String 
+        },
+        country: { 
+            type: String 
+        },
+        birthday: { 
+            type: Date 
+        },
+        gender: { 
+            type: String, enum: ['male', 'female', 'other'] 
+        },
         // child reference (one to many)
         wishlist: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
         }],
+        address: {
+            id: {
+                type: String,
+            },
+            coordinates: {
+                type: {
+                    type: String,
+                    enum: ['Point'],
+                    default: 'Point'
+                },
+                coordinates: {
+                    type: [Number], // [longitude, latitude]
+                    required: true
+                }
+            },
+            formattedAddress: {
+                type: String
+            },
+            placeId: {
+                type: String
+            }
+        },
+        
     },
     {
         timestamps: true,

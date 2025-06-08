@@ -29,6 +29,7 @@ const UserRoute = require("./routes/userRoute")
 const AuthRoute = require("./routes/authRoute")
 const ReviewRoute = require("./routes/reviewRoute")
 const WishlistRoute = require("./routes/wishlistRoute");
+const AddressRoute = require("./routes/addressRoute");
 const dbConection = require ('./config/database');
 
 // db connection
@@ -40,6 +41,7 @@ const app = express();
 // middlewares
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
 
 // Session middleware - MUST be before passport.initialize()
@@ -72,6 +74,7 @@ app.use('/api/v1/users', UserRoute);
 app.use('/api/v1/auth', AuthRoute);
 app.use('/api/v1/reviews', ReviewRoute);
 app.use('/api/v1/wishlist', WishlistRoute);
+app.use('/api/v1/address', AddressRoute);
 
 // 404 handler
 app.all('*', (req, res, next) => { 

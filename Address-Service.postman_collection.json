@@ -1,0 +1,108 @@
+{
+  "info": {
+    "_postman_id": "a8b7c6d5-e4f3-2g1h-0i9j-8k7l6m5n4o3p",
+    "name": "Address Service",
+    "description": "API collection for address management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get User Address",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/address",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "address"]
+        },
+        "description": "Get the current user's address"
+      }
+    },
+    {
+      "name": "Add User Address",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"coordinates\": [-73.9857, 40.7484],\n    \"formattedAddress\": \"123 Main St, New York, NY 10001, USA\",\n    \"placeId\": \"ChIJLU7jZClu5kcR4PcOOO6p3I0\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/address",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "address"]
+        },
+        "description": "Add a new address for the current user"
+      }
+    },
+    {
+      "name": "Update User Address",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"coordinates\": [-74.0018, 40.7215],\n    \"formattedAddress\": \"456 Broadway, New York, NY 10013, USA\",\n    \"placeId\": \"ChIJKeD7rFBawokRHEs5CuQdbx4\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/address",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "address"]
+        },
+        "description": "Update the current user's address"
+      }
+    },
+    {
+      "name": "Delete User Address",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/address",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "address"]
+        },
+        "description": "Delete the current user's address"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": "your-jwt-token-here"
+    }
+  ]
+}

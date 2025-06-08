@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        #search-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        #search-input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #save-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #save-btn:hover {
+            background-color: #45a049;
+        }
+        #update-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        #update-btn:hover {
+            background-color: #0b7dda;
+        }
+        #delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        #delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Manage Your Address</h1>
+        <p>Click on the map to select your location or search for an address.</p>
+        
+        <div id="search-container">
+            <input id="search-input" type="text" placeholder="Search for a location">
+        </div>
+        
+        <div id="map"></div>
+        
+        <form id="address-form">
+            <div class="form-group">
+                <label for="street">Street</label>
+                <input type="text" id="street" name="street">
+            </div>
+            
+            <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" id="city" name="city" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="state">State/Province</label>
+                <input type="text" id="state" name="state">
+            </div>
+            
+            <div class="form-group">
+                <label for="zip">ZIP/Postal Code</label>
+                <input type="text" id="zip" name="zip">
+            </div>
+            
+            <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" id="country" name="country" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" placeholder="+201234567890">
+            </div>
+            
+            <!-- Hidden fields for map data -->
+            <input type="hidden" id="coordinates" name="coordinates">
+            <input type="hidden" id="formattedAddress" name="formattedAddress">
+            <input type="hidden" id="placeId" name="placeId">
+            
+            <div class="buttons">
+                <button type="button" id="save-btn" onclick="saveAddress()">Add Address</button>
+                <button type="button" id="update-btn" onclick="updateAddress()">Update Address</button>
+                <button type="button" id="delete-btn" onclick="deleteAddress()">Delete Address</button>
+            </div>
+        </form>
+        
+        <div id="status"></div>
+    </div>
+    
+    <script>
+        // Global variables
+        let map, marker, hasAddress = false;
+        
+        // Initialize the map
+        function initMap() {
+            // Default center (Cairo, Egypt)
+            const defaultCenter = { lat: 30.0444, lng: 31.2357 };
+            
+            // Create map
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: defaultCenter,
+                zoom: 12,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true
+            });
+            
+            // Create marker
+            marker = new google.maps.Marker({
+                map: map,
+                draggable: true,
+                animation: google.maps.Animation.DROP
+            });
+            
+            // Add click event to the map
+            map.addListener('click', function(event) {
+                placeMarker(event.latLng);
+            });
+            
+            // Add dragend event to the marker
+            marker.addListener('dragend', function() {
+                const position = marker.getPosition();
+                reverseGeocode(position);
+            });
+            
+            // Initialize search box
+            const input = document.getElementById('search-input');
+            const searchBox = new google.maps.places.SearchBox(input);
+            
+            // Bias the SearchBox results towards current map's viewport
+            map.addListener('bounds_changed', function() {
+                searchBox.setBounds(map.getBounds());
+            });
+            
+            // Listen for the event fired when the user selects a prediction
+            searchBox.addListener('places_changed', function() {
+                const places = searchBox.getPlaces();
+                
+                if (places.length === 0) {
+                    return;
+                }
+                
+                // For each place, get the location and place marker
+                const bounds = new google.maps.LatLngBounds();
+                places.forEach(function(place) {
+                    if (!place.geometry || !place.geometry.location) {
+                        console.log("Returned place contains no geometry");
+                        return;
+                    }
+                    
+                    // Place marker at the location
+                    placeMarkerAndPanTo(place.geometry.location, place);
+                    
+                    if (place.geometry.viewport) {
+                        bounds.union(place.geometry.viewport);
+                    } else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                
+                map.fitBounds(bounds);
+            });
+            
+            // Load existing address if available
+            loadAddress();
+        }
+        
+        // Place marker at location and pan to it
+        function placeMarkerAndPanTo(latLng, place) {
+            marker.setPosition(latLng);
+            map.panTo(latLng);
+            
+            if (place) {
+                fillAddressFromPlace(place);
+            } else {
+                reverseGeocode(latLng);
+            }
+        }
+        
+        // Place marker at location
+        function placeMarker(latLng) {
+            marker.setPosition(latLng);
+            reverseGeocode(latLng);
+        }
+        
+        // Reverse geocode to get address details
+        function reverseGeocode(latLng) {
+            const geocoder = new google.maps.Geocoder();
+            
+            geocoder.geocode({ 'location': latLng }, function(results, status) {
+                if (status === 'OK') {
+                    if (results[0]) {
+                        fillAddressFromGeocode(results[0]);
+                    } else {
+                        showStatus('No address found for this location', 'error');
+                    }
+                } else {
+                    showStatus('Geocoder failed due to: ' + status, 'error');
+                }
+            });
+        }
+        
+        // Fill address form from geocode result
+        function fillAddressFromGeocode(result) {
+            const addressComponents = result.address_components;
+            const formattedAddress = result.formatted_address;
+            const placeId = result.place_id;
+            
+            let street = '', city = '', state = '', zip = '', country = '';
+            
+            for (const component of addressComponents) {
+                const types = component.types;
+                
+                if (types.includes('route')) {
+                    street = component.long_name;
+                } else if (types.includes('locality')) {
+                    city = component.long_name;
+                } else if (types.includes('administrative_area_level_1')) {
+                    state = component.long_name;
+                } else if (types.includes('postal_code')) {
+                    zip = component.long_name;
+                } else if (types.includes('country')) {
+                    country = component.long_name;
+                }
+            }
+            
+            // Fill form fields
+            document.getElementById('street').value = street;
+            document.getElementById('city').value = city;
+            document.getElementById('state').value = state;
+            document.getElementById('zip').value = zip;
+            document.getElementById('country').value = country;
+            document.getElementById('formattedAddress').value = formattedAddress;
+            document.getElementById('placeId').value = placeId;
+            
+            const position = marker.getPosition();
+            document.getElementById('coordinates').value = JSON.stringify([
+                position.lng(), // Longitude first
+                position.lat()  // Latitude second
+            ]);
+        }
+        
+        // Fill address form from place result
+        function fillAddressFromPlace(place) {
+            const addressComponents = place.address_components;
+            const formattedAddress = place.formatted_address;
+            const placeId = place.place_id;
+            
+            let street = '', city = '', state = '', zip = '', country = '';
+            
+            for (const component of addressComponents) {
+                const types = component.types;
+                
+                if (types.includes('route')) {
+                    street = component.long_name;
+                } else if (types.includes('locality')) {
+                    city = component.long_name;
+                } else if (types.includes('administrative_area_level_1')) {
+                    state = component.long_name;
+                } else if (types.includes('postal_code')) {
+                    zip = component.long_name;
+                } else if (types.includes('country')) {
+                    country = component.long_name;
+                }
+            }
+            
+            // Fill form fields
+            document.getElementById('street').value = street;
+            document.getElementById('city').value = city;
+            document.getElementById('state').value = state;
+            document.getElementById('zip').value = zip;
+            document.getElementById('country').value = country;
+            document.getElementById('formattedAddress').value = formattedAddress;
+            document.getElementById('placeId').value = placeId;
+            
+            const position = place.geometry.location;
+            document.getElementById('coordinates').value = JSON.stringify([
+                position.lng(), // Longitude first
+                position.lat()  // Latitude second
+            ]);
+        }
+        
+        // Load existing address from API
+        function loadAddress() {
+            // Get token from localStorage or cookie
+            const token = getToken();
+            
+            if (!token) {
+                showStatus('Please log in to manage your address', 'error');
+                return;
+            }
+            
+            fetch('/api/v1/address', {
+                method: 'GET',
+                headers: {
+                    'token': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmNjNmRjY2U5YjA0NTE1NDU3ZTQzOSIsImlhdCI6MTc0OTM0NzAwMiwiZXhwIjoxNzU3MTIzMDAyfQ.D1Cm8T15WoiBv0Fwp5k4KV_wsEllREBA0xlsEhT9LTo`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && data.data) {
+                    // Fill form with existing address data
+                    const address = data.data;
+                    
+                    document.getElementById('street').value = address.street || '';
+                    document.getElementById('city').value = address.city || '';
+                    document.getElementById('state').value = address.state || '';
+                    document.getElementById('zip').value = address.zip || '';
+                    document.getElementById('country').value = address.country || '';
+                    document.getElementById('phone').value = address.phone || '';
+                    document.getElementById('formattedAddress').value = address.formattedAddress || '';
+                    document.getElementById('placeId').value = address.placeId || '';
+                    
+                    // Set coordinates
+                    if (address.coordinates && address.coordinates.coordinates) {
+                        const coords = address.coordinates.coordinates;
+                        document.getElementById('coordinates').value = JSON.stringify(coords);
+                        
+                        // Place marker on map
+                        const latLng = new google.maps.LatLng(coords[1], coords[0]);
+                        marker.setPosition(latLng);
+                        map.setCenter(latLng);
+                        map.setZoom(15);
+                    }
+                    
+                    // Update UI to show we have an address
+                    hasAddress = true;
+                    document.getElementById('save-btn').textContent = 'Add Address';
+                    document.getElementById('update-btn').style.display = 'inline-block';
+                    document.getElementById('delete-btn').style.display = 'inline-block';
+                } else {
+                    // No address found
+                    hasAddress = false;
+                    document.getElementById('save-btn').textContent = 'Add Address';
+                    document.getElementById('update-btn').style.display = 'none';
+                    document.getElementById('delete-btn').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading address:', error);
+                showStatus('Error loading address. Please try again.', 'error');
+            });
+        }
+        
+        // Save new address
+        function saveAddress() {
+            // Get token from localStorage or cookie
+            const token = getToken();
+            
+            if (!token) {
+                showStatus('Please log in to save your address', 'error');
+                return;
+            }
+            
+            // Get form data
+            const street = document.getElementById('street').value;
+            const city = document.getElementById('city').value;
+            const state = document.getElementById('state').value;
+            const zip = document.getElementById('zip').value;
+            const country = document.getElementById('country').value;
+            const phone = document.getElementById('phone').value;
+            const formattedAddress = document.getElementById('formattedAddress').value;
+            const placeId = document.getElementById('placeId').value;
+            const coordinatesStr = document.getElementById('coordinates').value;
+            
+            // Validate required fields
+            if (!city || !country || !formattedAddress || !coordinatesStr) {
+                showStatus('Please fill in all required fields and select a location on the map', 'error');
+                return;
+            }
+            
+            // Parse coordinates
+            let coordinates;
+            try {
+                coordinates = JSON.parse(coordinatesStr);
+            } catch (e) {
+                showStatus('Invalid coordinates format', 'error');
+                return;
+            }
+            
+            // Prepare data
+            const addressData = {
+                street,
+                city,
+                state,
+                zip,
+                country,
+                phone,
+                coordinates,
+                formattedAddress,
+                placeId
+            };
+            
+            // Send request to API
+            fetch('/api/v1/address', {
+                method: 'POST',
+                headers: {
+                    'token': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmNjNmRjY2U5YjA0NTE1NDU3ZTQzOSIsImlhdCI6MTc0OTM0NzAwMiwiZXhwIjoxNzU3MTIzMDAyfQ.D1Cm8T15WoiBv0Fwp5k4KV_wsEllREBA0xlsEhT9LTo`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(addressData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showStatus('Address saved successfully', 'success');
+                    hasAddress = true;
+                    document.getElementById('save-btn').textContent = 'Add Address';
+                    document.getElementById('update-btn').style.display = 'inline-block';
+                    document.getElementById('delete-btn').style.display = 'inline-block';
+                } else {
+                    showStatus(data.message || 'Error saving address', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving address:', error);
+                showStatus('Error saving address. Please try again.', 'error');
+            });
+        }
+        
+        // Update existing address
+        function updateAddress() {
+            // Get token from localStorage or cookie
+            const token = getToken();
+            
+            if (!token) {
+                showStatus('Please log in to update your address', 'error');
+                return;
+            }
+            
+            // Get form data
+            const street = document.getElementById('street').value;
+            const city = document.getElementById('city').value;
+            const state = document.getElementById('state').value;
+            const zip = document.getElementById('zip').value;
+            const country = document.getElementById('country').value;
+            const phone = document.getElementById('phone').value;
+            const formattedAddress = document.getElementById('formattedAddress').value;
+            const placeId = document.getElementById('placeId').value;
+            const coordinatesStr = document.getElementById('coordinates').value;
+            
+            // Validate required fields
+            if (!city || !country || !formattedAddress || !coordinatesStr) {
+                showStatus('Please fill in all required fields and select a location on the map', 'error');
+                return;
+            }
+            
+            // Parse coordinates
+            let coordinates;
+            try {
+                coordinates = JSON.parse(coordinatesStr);
+            } catch (e) {
+                showStatus('Invalid coordinates format', 'error');
+                return;
+            }
+            
+            // Prepare data
+            const addressData = {
+                street,
+                city,
+                state,
+                zip,
+                country,
+                phone,
+                coordinates,
+                formattedAddress,
+                placeId
+            };
+            
+            // Send request to API
+            fetch('/api/v1/address', {
+                method: 'PUT',
+                headers: {
+                    'token': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmNjNmRjY2U5YjA0NTE1NDU3ZTQzOSIsImlhdCI6MTc0OTM0NzAwMiwiZXhwIjoxNzU3MTIzMDAyfQ.D1Cm8T15WoiBv0Fwp5k4KV_wsEllREBA0xlsEhT9LTo`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(addressData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showStatus('Address updated successfully', 'success');
+                } else {
+                    showStatus(data.message || 'Error updating address', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating address:', error);
+                showStatus('Error updating address. Please try again.', 'error');
+            });
+        }
+        
+        // Delete address
+        function deleteAddress() {
+            // Get token from localStorage or cookie
+            const token = getToken();
+            
+            if (!token) {
+                showStatus('Please log in to delete your address', 'error');
+                return;
+            }
+            
+            // Confirm deletion
+            if (!confirm('Are you sure you want to delete your address?')) {
+                return;
+            }
+            
+            // Send request to API
+            fetch('/api/v1/address', {
+                method: 'DELETE',
+                headers: {
+                    'token': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmNjNmRjY2U5YjA0NTE1NDU3ZTQzOSIsImlhdCI6MTc0OTM0NzAwMiwiZXhwIjoxNzU3MTIzMDAyfQ.D1Cm8T15WoiBv0Fwp5k4KV_wsEllREBA0xlsEhT9LTo`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showStatus('Address deleted successfully', 'success');
+                    
+                    // Clear form
+                    document.getElementById('address-form').reset();
+                    document.getElementById('coordinates').value = '';
+                    document.getElementById('formattedAddress').value = '';
+                    document.getElementById('placeId').value = '';
+                    
+                    // Remove marker from map
+                    marker.setMap(null);
+                    
+                    // Update UI
+                    hasAddress = false;
+                    document.getElementById('save-btn').textContent = 'Add Address';
+                    document.getElementById('update-btn').style.display = 'none';
+                    document.getElementById('delete-btn').style.display = 'none';
+                } else {
+                    showStatus(data.message || 'Error deleting address', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting address:', error);
+                showStatus('Error deleting address. Please try again.', 'error');
+            });
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = type;
+            statusElement.style.display = 'block';
+            
+            // Hide status after 5 seconds
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Get token from localStorage or cookie
+        function getToken() {
+            // Try to get token from localStorage
+            let token = localStorage.getItem('token');
+            
+            // If not in localStorage, try to get from cookie
+            if (!token) {
+                token = getCookie('jwt');
+            }
+            
+            return token;
+        }
+        
+        // Get cookie by name
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+    </script>
+    
+    // Load Google Maps API dynamically
+    function loadGoogleMapsScript(apiKey) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    }
+    
+    // Fetch API key from server
+    fetch('/api/maps/key')
+        .then(response => response.json())
+        .then(data => {
+            loadGoogleMapsScript(data.key);
+        })
+        .catch(error => {
+            console.error('Error fetching Google Maps API key:', error);
+            // Fallback to a default key (not recommended for production)
+            loadGoogleMapsScript('AIzaSyD_8C7p0Ws2gUu7wo0b6pK9Qu7LuzX2iWY');
+        });
+</body>
+</html>
