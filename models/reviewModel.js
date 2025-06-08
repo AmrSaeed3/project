@@ -43,7 +43,9 @@ reviewSchema.pre(/^find/, function (next) {
 
 reviewSchema.statics.calcAverageRatingsAndQuantity = async function (productId) {
     const result = await this.aggregate([
+        //stage 1 : filter reviews by productID
         { $match: { product: productId } },
+        //stage 2 : group reviews by productID and calculate average ratings and quantity 
         {
             $group: {
                 _id: 'product',
@@ -60,7 +62,7 @@ reviewSchema.statics.calcAverageRatingsAndQuantity = async function (productId) 
         await productModel.findByIdAndUpdate(productId, {
             ratingsAverage: result[0].avgRatings,
             ratingsQuantity: result[0].ratingsQuantity,
-        });
+        }); 
     } else {
         await productModel.findByIdAndUpdate(productId, {
             ratingsAverage: 0,

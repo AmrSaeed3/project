@@ -28,6 +28,7 @@ const ProductRoute = require("./routes/productRoute")
 const UserRoute = require("./routes/userRoute")
 const AuthRoute = require("./routes/authRoute")
 const ReviewRoute = require("./routes/reviewRoute")
+const WishlistRoute = require("./routes/wishlistRoute");
 const dbConection = require ('./config/database');
 
 // db connection
@@ -70,6 +71,7 @@ app.use('/api/v1/products', ProductRoute);
 app.use('/api/v1/users', UserRoute);
 app.use('/api/v1/auth', AuthRoute);
 app.use('/api/v1/reviews', ReviewRoute);
+app.use('/api/v1/wishlist', WishlistRoute);
 
 // 404 handler
 app.all('*', (req, res, next) => { 
