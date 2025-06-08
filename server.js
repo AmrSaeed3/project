@@ -7,6 +7,10 @@ const fs = require('fs');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
 
+const ApiError = require('./utils/apiError');
+const globalError = require('./middleware/errorMiddleware');
+const dbConection = require ('./config/database');
+
 // Try loading from config.env first, then fall back to .env
 if (fs.existsSync('config.env')) {
   dotenv.config({ path: 'config.env' });
@@ -18,20 +22,11 @@ if (fs.existsSync('config.env')) {
   console.warn('No environment file found. Using system environment variables.');
 }
 
-// Rest of your imports
-const ApiError = require('./utils/apiError');
-const globalError = require('./middleware/errorMiddleware');
-const CategoryRoute = require("./routes/categoryRoute")
-const SubCategoryRoute = require("./routes/subCategoryRoute")
-const BrandRoute = require("./routes/brandRoute")
-const ProductRoute = require("./routes/productRoute")
-const UserRoute = require("./routes/userRoute")
-const AuthRoute = require("./routes/authRoute")
-const ReviewRoute = require("./routes/reviewRoute")
-const WishlistRoute = require("./routes/wishlistRoute");
-const AddressRoute = require("./routes/addressRoute");
-const phoneOtpRoute = require('./routes/phoneOtpRoute');
-const dbConection = require ('./config/database');
+
+
+// mount routes
+const mountRoutes = require('./routes/index');
+
 
 // db connection
 dbConection();
@@ -41,8 +36,7 @@ const app = express();
 
 // middlewares
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(cookieParser());
 
 // Session middleware - MUST be before passport.initialize()
@@ -67,16 +61,7 @@ if (NODE_ENV === 'development'){
 }
 
 // mount routes
-app.use('/api/v1/categories', CategoryRoute); 
-app.use('/api/v1/subcategories', SubCategoryRoute);
-app.use('/api/v1/brand', BrandRoute);
-app.use('/api/v1/products', ProductRoute);
-app.use('/api/v1/users', UserRoute);
-app.use('/api/v1/auth', AuthRoute);
-app.use('/api/v1/reviews', ReviewRoute);
-app.use('/api/v1/wishlist', WishlistRoute);
-app.use('/api/v1/address', AddressRoute);
-app.use('/api/auth/phone', phoneOtpRoute);
+mountRoutes(app);
 
 // 404 handler
 app.all('*', (req, res, next) => { 
