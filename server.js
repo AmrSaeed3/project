@@ -30,6 +30,7 @@ const AuthRoute = require("./routes/authRoute")
 const ReviewRoute = require("./routes/reviewRoute")
 const WishlistRoute = require("./routes/wishlistRoute");
 const AddressRoute = require("./routes/addressRoute");
+const phoneOtpRoute = require('./routes/phoneOtpRoute');
 const dbConection = require ('./config/database');
 
 // db connection
@@ -75,6 +76,7 @@ app.use('/api/v1/auth', AuthRoute);
 app.use('/api/v1/reviews', ReviewRoute);
 app.use('/api/v1/wishlist', WishlistRoute);
 app.use('/api/v1/address', AddressRoute);
+app.use('/api/auth/phone', phoneOtpRoute);
 
 // 404 handler
 app.all('*', (req, res, next) => { 

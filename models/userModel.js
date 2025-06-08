@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: function() {
+            required: function () {
                 // Only require password if not using social login
                 return !this.googleId && !this.facebookId;
             },
@@ -61,23 +61,23 @@ const userSchema = new mongoose.Schema(
         authToken: {
             type: String,
         },
-        fullName: { 
-            type: String 
+        fullName: {
+            type: String
         },
-        phone: { 
-            type: String 
+        phone: {
+            type: String
         },
-        city: { 
-            type: String 
+        city: {
+            type: String
         },
-        country: { 
-            type: String 
+        country: {
+            type: String
         },
-        birthday: { 
-            type: Date 
+        birthday: {
+            type: Date
         },
-        gender: { 
-            type: String, enum: ['male', 'female', 'other'] 
+        gender: {
+            type: String, enum: ['male', 'female', 'other']
         },
         // child reference (one to many)
         wishlist: [{
@@ -106,7 +106,13 @@ const userSchema = new mongoose.Schema(
                 type: String
             }
         },
-        
+        phoneOtpToken: String,
+        phoneOtpExpires: Date,
+        isPhoneOtpVerified: {
+            type: Boolean,
+            default: false
+        },
+
     },
     {
         timestamps: true,
@@ -116,10 +122,10 @@ const userSchema = new mongoose.Schema(
 );
 
 // Pre-save hook to hash password
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
     // Only hash the password if it's modified (or new)
     if (!this.isModified('password') || !this.password) return next();
-    
+
     // Hash the password with cost of 12
     this.password = await bcrypt.hash(this.password, 12);
     next();
