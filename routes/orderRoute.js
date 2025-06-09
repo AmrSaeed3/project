@@ -15,7 +15,7 @@ const {
     filterOrderForLoggedUser,
     updateOrderToPaid,
     updateOrderToDelivered,
-    // checkoutSession,
+    createStripeSession
 } = require('../services/orderService');
 
 
@@ -28,11 +28,11 @@ router.use(protect);
 router.route('/:cartId').post(allowedTo('user'), createCashOrder);
 
 
-// router.get(
-//     '/checkout-session/:cartId',
-//     allowedTo('user'),
-//     checkoutSession
-// );
+router.get(
+    '/checkout-session/:cartId',
+    allowedTo('user'),
+    createStripeSession
+);
 
 // Get all orders for the logged-in user or all orders for admin/manager
 router.get(

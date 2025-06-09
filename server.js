@@ -2,6 +2,8 @@ const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const cors = require('cors');
+const compression = require('compression');
 const session = require('express-session');
 const fs = require('fs');
 const passport = require('passport');
@@ -33,6 +35,13 @@ dbConection();
 
 // express app
 const app = express();
+
+
+app.use(cors());
+app.options('*', cors()); // Enable pre-flight requests for all routes
+
+// Enable compression for better performance
+app.use(compression());
 
 // middlewares
 app.use(express.json());

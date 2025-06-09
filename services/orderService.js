@@ -1,16 +1,15 @@
 const asyncHandler = require('express-async-handler');
 const factory = require('./handlersFactory');
 const ApiError = require('../utils/apiError');
+const Stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
 const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
 const Product = require('../models/productModel');
 
-
-// Create a new order
+// Create a new order with cash payment method
 exports.createCashOrder = asyncHandler(async (req, res, next) => {
-    
     //1. Get the cart depend on cartId
     const cart = await Cart.findById(req.params.cartId);
     if (!cart) {
@@ -88,6 +87,7 @@ exports.updateOrderToPaid = factory.updateOne(Order, {
     fieldToSet: 'paidAt',
     valueToSet: Date.now()
 });
+
 // exports.updateOrderToPaid = asyncHandler(async (req, res, next) => {
 //     const order = await Order.findById(req.params.id);
 //     if (!order) {
@@ -126,3 +126,40 @@ exports.updateOrderToDelivered = factory.updateOne(Order, {
 //         }
 //     });
 // });
+
+// Create Stripe checkout session
+exports.createStripeSession = asyncHandler(async (req, res, next) => {
+    //1. Get the cart depend on cartId
+    const cart = await Cart.findById(req.params.cartId);
+    if (!cart) {
+        return next(new ApiError('Cart not found', 404));
+    }
+
+    //2. get order price depend on cart price && check if coupon is applied
+    const cartPrice = cart.totalPriceAfterDiscount
+        ? cart.totalPriceAfterDiscount
+        : cart.totalPrice;
+    const totalOrderPrice = cartPrice + cart.taxPrice + cart.shippingPrice;
+
+    //3. Create a Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+            {
+                name: req.user.name,
+                amount: totalOrderPrice * 100, 
+                currency: 'egp',
+                quantity: 1,
+            },
+        ],
+        mode: 'payment',
+        success_url: `${process.env.BASE_URL}/orders`,
+        cancel_url: `${process.env.BASE_URL}/cart/${req.params.cartId}`,
+        customer_email: req.user.email,
+        client_reference_id: req.params.cartId,
+        metadata: req.body.shippingAddress,
+
+    });
+
+    res.status(200).json({ status: 'success', session });
+});
