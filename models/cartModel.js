@@ -17,15 +17,17 @@ const cartSchema = new mongoose.Schema(
                 quantity: {
                     type: Number,
                     required: [true, 'Cart item quantity required'],
+                    default: 1,
                     min: [1, 'Cart item quantity must be positive'],
                 },
+                price: {
+                    type: Number,
+                    required: [true, 'Cart item price required'],
+                },
+
             },
         ],
         totalPrice: {
-            type: Number,
-            default: 0,
-        },
-        totalItems: {
             type: Number,
             default: 0,
         },
