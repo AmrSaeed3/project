@@ -13,6 +13,8 @@ const ApiError = require('./utils/apiError');
 const globalError = require('./middleware/errorMiddleware');
 const dbConection = require ('./config/database');
 
+const { webhookStripe } = require('./services/orderService');
+
 // Try loading from config.env first, then fall back to .env
 if (fs.existsSync('config.env')) {
   dotenv.config({ path: 'config.env' });
@@ -47,6 +49,9 @@ app.use(compression());
 app.use(express.json());
 
 app.use(cookieParser());
+
+// checkout webhooks
+app.post('/webhook-stripe', express.raw({ type: 'application/json' }), webhookStripe);
 
 // Session middleware - MUST be before passport.initialize()
 app.use(session({
