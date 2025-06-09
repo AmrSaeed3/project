@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const orderSchema = new mongoose.orderSchema(
+const orderSchema = new mongoose.Schema(
     {
         user:{
             type : mongoose.Schema.ObjectId,
@@ -8,15 +8,14 @@ const orderSchema = new mongoose.orderSchema(
             required:[true,'order must be belong to user'],
         },
         products: [
-                    {
-                        product: {
-                            type: mongoose.Schema.Types.ObjectId,
-                            ref: 'Product',
-                        },
-                        quantity: Number,
-                            
-                        price:  Number,
-                    },
+            {
+                product: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Product',
+                },
+                quantity: Number,
+                price:  Number,
+            },
         ],
         taxPrice:{
             type: Number,
@@ -51,6 +50,17 @@ const orderSchema = new mongoose.orderSchema(
     },
     { Timestamp: true }
 );
+
+orderSchema.pre(/^find/, function (next) {
+    this.populate({
+        path: 'user',
+        select: 'name email phone'
+    }).populate({
+        path: 'products.product',
+        select: 'name image price'
+    });
+    next();
+});
 
 module.exports = mongoose.model('Order', orderSchema);
 

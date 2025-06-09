@@ -1,6 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const factory = require('./handlersFactory');
 const ApiError = require('../utils/apiError');
+
+
 const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
 const Product = require('../models/productModel');
@@ -60,3 +62,67 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
         }
     });
 });
+
+// Middleware to filter orders for the logged-in user
+exports.filterOrderForLoggedUser = asyncHandler(
+    async (req, res, next) => {
+        // If the user is an admin or manager, return all orders
+        if (req.user.role === 'user') {
+            // If the user is a regular user, filter orders by user ID
+            req.query.user = req.user.id;
+        }
+        next();
+    }
+);
+
+// Get all orders for user and admin and manager
+exports.findAllOrders = factory.getAll(Order)
+
+// Get a specific order by ID
+exports.findSpecificOrder = factory.getOne(Order);
+
+// Update order to paid
+exports.updateOrderToPaid = factory.updateOne(Order, {
+    fieldToUpdate: 'isPaid',
+    valueToUpdate: true,
+    fieldToSet: 'paidAt',
+    valueToSet: Date.now()
+});
+// exports.updateOrderToPaid = asyncHandler(async (req, res, next) => {
+//     const order = await Order.findById(req.params.id);
+//     if (!order) {
+//         return next(new ApiError('Order not found', 404));
+//     }
+//     order.isPaid = true;
+//     order.paidAt = Date.now();
+//     await order.save();
+//     res.status(200).json({
+//         status: 'success',
+//         data: {
+//             order
+//         }
+//     });
+// });
+
+// Update order to delivered
+exports.updateOrderToDelivered = factory.updateOne(Order, {
+    fieldToUpdate: 'isDelivered',
+    valueToUpdate: true,
+    fieldToSet: 'deliveredAt',
+    valueToSet: Date.now()
+});
+// exports.updateOrderToDelivered = asyncHandler(async (req, res, next) => {
+//     const order = await Order.findById(req.params.id);
+//     if (!order) {
+//         return next(new ApiError('Order not found', 404));
+//    }
+//     order.isDelivered = true;
+//     order.deliveredAt = Date.now();
+//     await order.save();
+//     res.status(200).json({
+//         status: 'success',
+//         data: {
+//             order
+//         }
+//     });
+// });
