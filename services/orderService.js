@@ -143,7 +143,6 @@ exports.createStripeSession = asyncHandler(async (req, res, next) => {
 
     //3. Create a Stripe checkout session
     const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
         line_items: [
             {
                 name: req.user.name,
