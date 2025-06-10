@@ -29,12 +29,12 @@ router.route('/add')
     .post(protect, addToCartValidator, addToCart);
 
 // /api/cart/remove
-router.route('/remove/:id')
-    .post(protect, removeFromCartValidator, removeFromCart);
+router.route('/remove')
+    .delete(protect, removeFromCartValidator, removeFromCart);
 
 // /api/cart/update
-router.route('/update/:id')
-    .post(protect, updateCartItemQuantityValidator, updateCartItemQuantity);
+router.route('/update')
+    .put(protect, updateCartItemQuantityValidator, updateCartItemQuantity);
 
 // /api/cart/apply-coupon
 router.route('/apply-coupon')
