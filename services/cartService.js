@@ -43,6 +43,8 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         }
     }
     calculateTotalCartPrice(cart);
+    cart.totalPriceAfterDiscount = cart.totalPrice;
+
 
     await cart.save();
 
@@ -62,6 +64,7 @@ exports.removeFromCart = asyncHandler(async (req, res, next) => {
         { new: true }
     );
     calculateTotalCartPrice(cart);
+    cart.totalPriceAfterDiscount = cart.totalPrice;
 
     res.status(200).json({
         status: 'success',
@@ -121,6 +124,7 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
         return next(new ApiError(`No product found in cart`, 404));
     }
     calculateTotalCartPrice(cart);
+    cart.totalPriceAfterDiscount = cart.totalPrice;
 
     await cart.save();
 

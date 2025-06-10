@@ -14,7 +14,8 @@ const {
     getCoupon,
     getCouponByID,
     updateCouponByID,
-    deleteCouponByID
+    deleteCouponByID,
+    verifyCoupon
 } = require("../services/couponService");
 
 const router = express.Router();
@@ -38,5 +39,6 @@ router.route('/:id')
         protect,
         allowedTo('admin'),
         deleteCouponValidator, deleteCouponByID);
+
 
 module.exports = router;

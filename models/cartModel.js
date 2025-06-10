@@ -33,7 +33,9 @@ const cartSchema = new mongoose.Schema(
         },
         totalPriceAfterDiscount: {
             type: Number,
-            default: 0,
+            default: function () {
+                return this.totalPrice;
+            },
         },
     },
     {

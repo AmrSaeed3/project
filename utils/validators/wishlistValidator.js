@@ -23,7 +23,7 @@ exports.addToWishlistValidator = [
 exports.removeFromWishlistValidator = [
     check('productId')
         .notEmpty()
-        .withMessage('Product ID is required')
+        .withMessage('Product ID is required in params')
         .isMongoId()
         .withMessage('Invalid product ID format')
         .custom((val) => {

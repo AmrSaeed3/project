@@ -1,6 +1,7 @@
+require('dotenv').config({ path: './config.env' }); // <-- Add this as the first line
+
 const path = require('path');
 const express = require('express');
-const dotenv = require('dotenv');
 const morgan = require('morgan');
 const cors = require('cors');
 const compression = require('compression');
@@ -11,21 +12,9 @@ const cookieParser = require('cookie-parser');
 
 const ApiError = require('./utils/apiError');
 const globalError = require('./middleware/errorMiddleware');
-const dbConection = require ('./config/database');
+const dbConection = require('./config/database');
 
-const { webhookStripe } = require('./services/orderService');
-
-// Try loading from config.env first, then fall back to .env
-if (fs.existsSync('config.env')) {
-  dotenv.config({ path: 'config.env' });
-  console.log('Loaded environment variables from config.env');
-} else if (fs.existsSync('.env')) {
-  dotenv.config();
-  console.log('Loaded environment variables from .env');
-} else {
-  console.warn('No environment file found. Using system environment variables.');
-}
-
+const { webhookCheckout } = require('./services/orderService');
 
 
 // mount routes
@@ -51,7 +40,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // checkout webhooks
-app.post('/webhook-stripe', express.raw({ type: 'application/json' }), webhookStripe);
+app.post('/webhook-stripe', express.raw({ type: 'application/json' }), webhookCheckout);
 
 // Session middleware - MUST be before passport.initialize()
 app.use(session({
@@ -69,17 +58,17 @@ app.use(passport.session());
 require('./services/auth/socialAuthService');
 
 const NODE_ENV = process.env.NODE_ENV;
-if (NODE_ENV === 'development'){
-    app.use(morgan('dev'))
-    console.log(`mode ${NODE_ENV}`)
+if (NODE_ENV === 'development') {
+  app.use(morgan('dev'))
+  console.log(`mode ${NODE_ENV}`)
 }
 
 // mount routes
 mountRoutes(app);
 
 // 404 handler
-app.all('*', (req, res, next) => { 
-    next(new ApiError(`Can't find this route: ${req.originalUrl}`, 404));
+app.all('*', (req, res, next) => {
+  next(new ApiError(`Can't find this route: ${req.originalUrl}`, 404));
 });
 
 // global error handler
@@ -90,15 +79,15 @@ const PORT = process.env.PORT || 8000;
 const HOST = '0.0.0.0'; // This is crucial for cloud platforms like Render
 
 const server = app.listen(PORT, HOST, () => {
-    console.log(`Server running on ${HOST}:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Server running on ${HOST}:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
 });
 
 // handle rejections outside express
 process.on('unhandledRejection', (err) => {
-    console.log(`Unhandled Rejection: ${err.name} | ${err.message}`);
-    server.close(() => {
-        console.log('Shutting down...');
-        process.exit(1);
-    });
+  console.log(`Unhandled Rejection: ${err.name} | ${err.message}`);
+  server.close(() => {
+    console.log('Shutting down...');
+    process.exit(1);
+  });
 });

@@ -5,7 +5,6 @@ const productSchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            required: [true, 'product name required'],
             minlength: [3, 'too short product name'],
             maxlength: [100, 'too long product name'],
             trim: true,
@@ -50,10 +49,10 @@ const productSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
-        category:{type:String , required:true},
-        typecategory:{type:String , required:true},
-        subcategory1:{type:String , required:true},
-        subcategory2:{type:String , required:true},
+        category: String,
+        typecategory: String,
+        subcategory1: String,
+        subcategory2: String,
         subCategory: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "SubCategory",
@@ -83,6 +82,9 @@ const productSchema = new mongoose.Schema(
     }
 );
 
+// Add this to your schema definition
+productSchema.index({ name: 'text', description: 'text' });
+
 // Make sure the ref matches exactly the model name used in reviewModel.js
 productSchema.virtual('reviews', {
     ref: 'Review', // This should match exactly what's in reviewModel.js
@@ -91,22 +93,22 @@ productSchema.virtual('reviews', {
 }); // Make sure the ref matches exactly the model name used in reviewModel.js
 
 
-productSchema.pre(/^find/, function (next) {
-    this.populate({
-        path: "category",
-        select: "name -_id",
-    })
-    .populate({
-        path: "brand",
-        select: "name -_id",
-    })
-    .populate({
-        path: "subCategory",
-        select: "name -_id",
-    });
-    
-    // Don't populate reviews here, we'll do it explicitly in the controller
-    next();
-});
+// productSchema.pre(/^find/, function (next) {
+//     this.populate({
+//         path: "category",
+//         select: "name -_id",
+//     })
+//         .populate({
+//             path: "brand",
+//             select: "name -_id",
+//         })
+//         .populate({
+//             path: "subCategory",
+//             select: "name -_id",
+//         });
+
+//     // Don't populate reviews here, we'll do it explicitly in the controller
+//     next();
+// });
 
 module.exports = mongoose.model("Product", productSchema);

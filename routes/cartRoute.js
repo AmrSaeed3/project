@@ -5,7 +5,7 @@ const {
     removeFromCartValidator,
     updateCartItemQuantityValidator,
     applyCouponValidator,
-    gitLoggedUserCartValidator,
+    
 } = require('../utils/validators/cartValidator');
 
 const {
@@ -21,7 +21,7 @@ const router = express.Router();
 
 // /api/cart
 router.route('/')
-    .get(protect, gitLoggedUserCartValidator, getLoggedUserCart)
+    .get(protect, getLoggedUserCart)
     .delete(protect, clearCart);
 
 // /api/cart/add

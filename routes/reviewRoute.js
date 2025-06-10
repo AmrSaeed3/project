@@ -23,7 +23,7 @@ const router = express.Router({ mergeParams: true });
 
 // /api/reviews
 router.route('/')
-    .get(getReview)
+    .get(protect, allowedTo('admin'), getReview)
     .post(
         protect,
         allowedTo('user'),

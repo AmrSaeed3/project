@@ -18,9 +18,11 @@ exports.deleteOne = (Model) =>
             return next(new ApiError(`No document for this id ${id}`, 404));
         }
 
-        // Trigger "remove" event when update document
-        document.remove();
-        res.status(204).send();
+        res.status(200).json({
+            status: 'success',
+            data: null,
+            message: 'Document deleted successfully'
+        });
     });
 
 exports.updateOne = (Model) =>
@@ -71,10 +73,10 @@ exports.getOne = (Model, populationOpt) =>
             try {
                 // Find similar products from the ProductSimilarity collection
                 const similarityData = await ProductSimilarity.findOne({ productId: id });
-                
+
                 // Convert document to a plain object so we can add properties
                 const responseDoc = document.toObject();
-                
+
                 // Add similar products to the response if they exist
                 if (similarityData && similarityData.similarProducts) {
                     // Get top 5 similar products
@@ -84,10 +86,10 @@ exports.getOne = (Model, populationOpt) =>
                             productId: item.similarProductId,
                             similarityScore: item.similarityScore
                         }));
-                    
+
                     // Add to response
                     responseDoc.similarProducts = topSimilarProducts;
-                    
+
                     // If we have similar products, populate them with basic info
                     if (topSimilarProducts.length > 0) {
                         const productIds = topSimilarProducts.map(item => item.productId);
@@ -95,13 +97,13 @@ exports.getOne = (Model, populationOpt) =>
                             { _id: { $in: productIds } },
                             'name imageCover price slug'
                         );
-                        
+
                         // Create a map for quick lookup
                         const productMap = {};
                         similarProductsData.forEach(product => {
                             productMap[product._id.toString()] = product;
                         });
-                        
+
                         // Replace IDs with actual product data
                         responseDoc.similarProducts = responseDoc.similarProducts.map(item => ({
                             product: productMap[item.productId.toString()],
@@ -111,7 +113,7 @@ exports.getOne = (Model, populationOpt) =>
                 } else {
                     responseDoc.similarProducts = [];
                 }
-                
+
                 return res.status(200).json({ data: responseDoc });
             } catch (error) {
                 console.error('Error fetching similar products:', error);
@@ -124,7 +126,7 @@ exports.getOne = (Model, populationOpt) =>
         res.status(200).json({ data: document });
     });
 
-exports.getAll = (Model, modelName = '') =>
+exports.getAll = (Model) =>
     asyncHandler(async (req, res) => {
         let filter = {};
         if (req.filterObj) {
@@ -133,11 +135,11 @@ exports.getAll = (Model, modelName = '') =>
         // Build query
         const documentsCounts = await Model.countDocuments();
         const apiFeatures = new ApiFeatures(Model.find(filter), req.query)
-            .paginate(documentsCounts)
+            .search('Product')   // <-- must come before filter()
             .filter()
-            .search(modelName)
+            .sort()
             .limitFields()
-            .sort();
+            .paginate(documentsCounts);
 
         // Execute query
         const { mongooseQuery, paginationResult } = apiFeatures;
@@ -147,3 +149,4 @@ exports.getAll = (Model, modelName = '') =>
             .status(200)
             .json({ results: documents.length, paginationResult, data: documents });
     });
+

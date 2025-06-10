@@ -9,22 +9,26 @@ const {
     getWishlist
 } = require('../services/wishlistService');
 
+const { protect, allowedTo } = require('../services/auth/index');
+
 const express = require('express');
 const router = express.Router();
 
 // /api/wishlist
 router.route('/')
-    .get(authorization.protect, getWishlist);
+    .get(protect,allowedTo('user'), getWishlist);
 
-    // /api/wishlist/:productId
-    router.route('/:productId')
+// /api/wishlist/:productId
+router.route('/:productId')
     .post(
-        authorization.protect,
+        protect,
+        allowedTo('user'),
         addToWishlistValidator,
         addToWishlist
     )
     .delete(
-        authorization.protect,
+        protect,
+        allowedTo('user'),
         removeFromWishlistValidator,
         removeFromWishlist
     );

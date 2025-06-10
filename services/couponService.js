@@ -15,3 +15,4 @@ exports.updateCouponByID = factory.updateOne(Coupon);
 
 // This function deletes a coupon by its ID from the database
 exports.deleteCouponByID = factory.deleteOne(Coupon);
+

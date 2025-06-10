@@ -68,21 +68,9 @@ exports.applyCouponValidator = [
     check('coupon')
         .notEmpty()
         .withMessage('Coupon is required')
-        .custom(async (val) => {
-            const coupon = await Coupon.findOne({ name: val });
-            if (!coupon) {
-                return Promise.reject(
-                    new Error(`No coupon found for this name: ${val}`)
-                );
-                }
-            return true;
-        }),
+        .isString()
+        .withMessage('Coupon must be a string'),
+
     validatorMiddleware,
 ];
 
-exports.gitLoggedUserCartValidator = [
-    check('id')
-        .isMongoId()
-        .withMessage('Invalid cart ID format'),
-    validatorMiddleware,
-];

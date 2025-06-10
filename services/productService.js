@@ -25,7 +25,7 @@ exports.validateProductImages = (req, res, next) => {
 exports.createProduct = factory.createOne(Product);
 
 // Get all products
-exports.getProduct = factory.getAll(Product, 'product');
+exports.getProduct = factory.getAll(Product);
 
 // Get a single product by ID, explicitly populate reviews virtual
 exports.getProductByID = factory.getOne(Product, [

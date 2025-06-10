@@ -6,12 +6,12 @@ const { protect, allowedTo } = require('../services/auth/index');
 
 const {
     createCashOrder,
+    checkoutSession,
     findAllOrders,
     findSpecificOrder,
-    filterOrderForLoggedUser,
     updateOrderToPaid,
     updateOrderToDelivered,
-    createStripeSession
+    filterOrderForLoggedUser,
 } = require('../services/orderService');
 
 
@@ -27,7 +27,7 @@ router.route('/:cartId').post(allowedTo('user'), createCashOrder);
 router.get(
     '/checkout-session/:cartId',
     allowedTo('user'),
-    createStripeSession
+    checkoutSession
 );
 
 // Get all orders for the logged-in user or all orders for admin/manager
@@ -38,7 +38,7 @@ router.get(
     findAllOrders
 );
 router.get(
-    '/:id', 
+    '/:id',
     allowedTo('user', 'admin', 'manager'),
     filterOrderForLoggedUser,
     findSpecificOrder);

@@ -1,228 +1,215 @@
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const asyncHandler = require('express-async-handler');
 const factory = require('./handlersFactory');
 const ApiError = require('../utils/apiError');
-const Stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-
-const Order = require('../models/orderModel');
-const Cart = require('../models/cartModel');
+const User = require('../models/userModel');
 const Product = require('../models/productModel');
+const Cart = require('../models/cartModel');
+const Order = require('../models/orderModel');
 
-// Create a new order with cash payment method
+
 exports.createCashOrder = asyncHandler(async (req, res, next) => {
-    //1. Get the cart depend on cartId
+    // app settings
+    const taxPrice = 0;
+    const shippingPrice = 0;
+
+    // 1) Get cart depend on cartId
     const cart = await Cart.findById(req.params.cartId);
     if (!cart) {
-        return next(new ApiError('Cart not found', 404));
+        return next(
+            new ApiError(`There is no such cart with id ${req.params.cartId}`, 404)
+        );
     }
 
-    //2. get order price depend on cart price && check if coupon is applied
+    // 2) Get order price depend on cart price "Check if coupon apply"
     const cartPrice = cart.totalPriceAfterDiscount
         ? cart.totalPriceAfterDiscount
-        : cart.totalPrice;
-    const totalOrderPrice = cartPrice + cart.taxPrice + cart.shippingPrice;
-    
-    //3. create order with default payment method 'cash'
+        : cart.totalCartPrice;
+
+    const totalOrderPrice = cartPrice + taxPrice + shippingPrice;
+
+    // 3) Create order with default paymentMethodType cash
     const order = await Order.create({
-        user: req.user.id,
-        products: cart.products.map(item => ({
-            product: item.product,
-            quantity: item.quantity,
-            price: item.price,
-        })),
-        paymentMethod: 'cash',
-        shippingAddress: cart.shippingAddress,
-        totalPrice: totalOrderPrice
+        user: req.user._id,
+        products: cart.products,
+        shippingAddress: req.body.shippingAddress,
+        totalOrderPrice,
     });
-    
-    //4. After creating order, decrement the product quantity in stock, increment product sold
-    if(order){
-        const bulkOperations = cart.products.map(item => ({
+
+    // 4) After creating order, decrement product quantity, increment product sold
+    if (order) {
+        const bulkOption = cart.products.map((item) => ({
             updateOne: {
                 filter: { _id: item.product },
-                update: {
-                    $inc: {
-                        quantity: -item.quantity,
-                        sold: +item.quantity
-                    }
-                }
-            }
+                update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+            },
         }));
-        await Product.bulkWrite(bulkOperations, {});
-        
-    
-    //5. clear the cart depend on cartId
-    await Cart.findByIdAndDelete(cart._id);
+        await Product.bulkWrite(bulkOption, {});
+
+        // 5) Clear cart depend on cartId
+        await Cart.findByIdAndDelete(req.params.cartId);
     }
-    res.status(201).json({
-        status: 'success',
-        data: {
-            order
-        }
-    });
+
+    res.status(201).json({ status: 'success', data: order });
 });
 
-// Middleware to filter orders for the logged-in user
-exports.filterOrderForLoggedUser = asyncHandler(
-    async (req, res, next) => {
-        // If the user is an admin or manager, return all orders
-        if (req.user.role === 'user') {
-            // If the user is a regular user, filter orders by user ID
-            req.query.user = req.user.id;
-        }
-        next();
-    }
-);
+exports.filterOrderForLoggedUser = asyncHandler(async (req, res, next) => {
+    if (req.user.role === 'user') req.filterObj = { user: req.user._id };
+    next();
+});
 
-// Get all orders for user and admin and manager
-exports.findAllOrders = factory.getAll(Order)
+exports.findAllOrders = factory.getAll(Order);
 
-// Get a specific order by ID
 exports.findSpecificOrder = factory.getOne(Order);
 
-// Update order to paid
-exports.updateOrderToPaid = factory.updateOne(Order, {
-    fieldToUpdate: 'isPaid',
-    valueToUpdate: true,
-    fieldToSet: 'paidAt',
-    valueToSet: Date.now()
+exports.updateOrderToPaid = asyncHandler(async (req, res, next) => {
+    // check if order exist
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+        return next(
+            new ApiError(
+                `There is no such a order with this id:${req.params.id}`,
+                404
+            )
+        );
+    }
+    // update order to paid
+    order.isPaid = true;
+    order.paidAt = Date.now();
+
+    const updatedOrder = await order.save();
+
+    res.status(200).json(
+        {
+            status: 'success',
+            data: updatedOrder
+        });
 });
 
-// exports.updateOrderToPaid = asyncHandler(async (req, res, next) => {
-//     const order = await Order.findById(req.params.id);
-//     if (!order) {
-//         return next(new ApiError('Order not found', 404));
-//     }
-//     order.isPaid = true;
-//     order.paidAt = Date.now();
-//     await order.save();
-//     res.status(200).json({
-//         status: 'success',
-//         data: {
-//             order
-//         }
-//     });
-// });
 
-// Update order to delivered
-exports.updateOrderToDelivered = factory.updateOne(Order, {
-    fieldToUpdate: 'isDelivered',
-    valueToUpdate: true,
-    fieldToSet: 'deliveredAt',
-    valueToSet: Date.now()
-});
-// exports.updateOrderToDelivered = asyncHandler(async (req, res, next) => {
-//     const order = await Order.findById(req.params.id);
-//     if (!order) {
-//         return next(new ApiError('Order not found', 404));
-//    }
-//     order.isDelivered = true;
-//     order.deliveredAt = Date.now();
-//     await order.save();
-//     res.status(200).json({
-//         status: 'success',
-//         data: {
-//             order
-//         }
-//     });
-// });
-
-// Create Stripe checkout session
-exports.createStripeSession = asyncHandler(async (req, res, next) => {
-    //1. Get the cart depend on cartId
-    const cart = await Cart.findById(req.params.cartId);
-    if (!cart) {
-        return next(new ApiError('Cart not found', 404));
+exports.updateOrderToDelivered = asyncHandler(async (req, res, next) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+        return next(
+            new ApiError(
+                `There is no such a order with this id:${req.params.id}`,
+                404
+            )
+        );
     }
 
-    //2. get order price depend on cart price && check if coupon is applied
+    // update order to paid
+    order.isDelivered = true;
+    order.deliveredAt = Date.now();
+
+    const updatedOrder = await order.save();
+
+    res.status(200).json({ status: 'success', data: updatedOrder });
+});
+
+
+exports.checkoutSession = asyncHandler(async (req, res, next) => {
+    // app settings
+    const taxPrice = 0;
+    const shippingPrice = 0;
+
+    // 1) Get cart depend on cartId
+    const cart = await Cart.findById(req.params.cartId);
+    if (!cart) {
+        return next(
+            new ApiError(`There is no such cart with id ${req.params.cartId}`, 404)
+        );
+    }
+
+    // 2) Get order price depend on cart price "Check if coupon apply"
     const cartPrice = cart.totalPriceAfterDiscount
         ? cart.totalPriceAfterDiscount
-        : cart.totalPrice;
-    const totalOrderPrice = cartPrice + cart.taxPrice + cart.shippingPrice;
+        : cart.totalCartPrice;
 
-    //3. Create a Stripe checkout session
+    const totalOrderPrice = cartPrice + taxPrice + shippingPrice;
+
+    // 3) Create stripe checkout session
     const session = await stripe.checkout.sessions.create({
         line_items: [
             {
-                name: req.user.name,
-                amount: totalOrderPrice * 100, 
-                currency: 'egp',
+                price_data: {
+                    currency: 'egp',
+                    product_data: {
+                        name: req.user.name,
+                    },
+                    unit_amount: Math.round(totalOrderPrice * 100), // amount in cents
+                },
                 quantity: 1,
             },
         ],
         mode: 'payment',
-        success_url: `${process.env.BASE_URL}/orders`,
-        cancel_url: `${process.env.BASE_URL}/cart/${req.params.cartId}`,
+        success_url: `${req.protocol}://${req.get('host')}/orders`,
+        cancel_url: `${req.protocol}://${req.get('host')}/cart`,
         customer_email: req.user.email,
         client_reference_id: req.params.cartId,
         metadata: req.body.shippingAddress,
-
     });
 
+    // 4) send session to response
     res.status(200).json({ status: 'success', session });
 });
 
-exports.webhookStripe = asyncHandler(async (req, res, next) => {
+const createCardOrder = async (session) => {
+    const cartId = session.client_reference_id;
+    const shippingAddress = session.metadata;
+    const oderPrice = session.amount_total / 100;
+
+    const cart = await Cart.findById(cartId);
+    const user = await User.findOne({ email: session.customer_email });
+
+    // 3) Create order with default paymentMethodType card
+    const order = await Order.create({
+        user: user._id,
+        products: cart.products,
+        shippingAddress,
+        totalOrderPrice: oderPrice,
+        isPaid: true,
+        paidAt: Date.now(),
+        paymentMethodType: 'card',
+    });
+
+    // 4) After creating order, decrement product quantity, increment product sold
+    if (order) {
+        const bulkOption = cart.products.map((item) => ({
+            updateOne: {
+                filter: { _id: item.product },
+                update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+            },
+        }));
+        await Product.bulkWrite(bulkOption, {});
+
+        // 5) Clear cart depend on cartId
+        await Cart.findByIdAndDelete(cartId);
+    }
+};
+
+// @desc    This webhook will run when stripe payment success paid
+// @route   POST /webhook-checkout
+// @access  Protected/User
+exports.webhookCheckout = asyncHandler(async (req, res, next) => {
     const sig = req.headers['stripe-signature'];
+
     let event;
 
     try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+        event = stripe.webhooks.constructEvent(
+            req.body,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET
+        );
     } catch (err) {
         return res.status(400).send(`Webhook Error: ${err.message}`);
-        }
-
-    // Handle the event
-    if (event.type === 'checkout.session.completed') {
-        const session = event.data.object;
-
-        //1. Get the cart depend on cartId
-        const cart = await Cart.findById(session.client_reference_id);
-        if (!cart) {
-            return next(new ApiError('Cart not found', 404));
-        }
-
-        //2. get order price depend on cart price && check if coupon is applied
-        const cartPrice = cart.totalPriceAfterDiscount
-            ? cart.totalPriceAfterDiscount
-            : cart.totalPrice;
-        const totalOrderPrice = cartPrice + cart.taxPrice + cart.shippingPrice;
-
-        //3. create order with default payment method 'card'
-        const order = await Order.create({
-            user: session.metadata.userId,
-            products: cart.products.map(item => ({
-                product: item.product,
-                quantity: item.quantity,
-                price: item.price,
-            })),
-            paymentMethod: 'card',
-            shippingAddress: session.metadata.shippingAddress,
-            totalPrice: totalOrderPrice,
-            isPaid: true,
-            paidAt: Date.now()
-        });
-
-        //4. After creating order, decrement the product quantity in stock, increment product sold
-        if(order){
-            const bulkOperations = cart.products.map(item => ({
-                updateOne: {
-                    filter: { _id: item.product },
-                    update: {
-                        $inc: {
-                            quantity: -item.quantity,
-                            sold: +item.quantity
-                        }
-                    }
-                }
-            }));
-            await Product.bulkWrite(bulkOperations, {});
-        
-        //5. clear the cart depend on cartId
-        await Cart.findByIdAndDelete(cart._id);
-        }
     }
-    // Return a response to acknowledge receipt of the event
+    if (event.type === 'checkout.session.completed') {
+        //  Create order
+        createCardOrder(event.data.object);
+    }
+
     res.status(200).json({ received: true });
 });
