@@ -14,11 +14,11 @@ const calculateTotalCartPrice = (cart) => {
     });
     cart.totalPrice = totalPrice;
     return totalPrice;
-    };
+};
 
 // Add product to cart
 exports.addToCart = asyncHandler(async (req, res, next) => {
-    const{ productId  } = req.body;
+    const { productId } = req.body;
 
     const product = await Product.findById(productId);
 
@@ -27,7 +27,7 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
     if (!cart) {
         cart = await Cart.create({
             user: req.user.id,
-            products: [{ product: productId, price:product.price }],
+            products: [{ product: productId, price: product.price }],
         });
     } else {
         const productIndex = cart.products.findIndex(
@@ -37,10 +37,9 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         if (productIndex > -1) {
             const cartItem = cart.products[productIndex];
             cartItem.quantity += 1;
-
-            cart.cartItems[productIndex] = cartItem;
+            cart.products[productIndex] = cartItem;
         } else {
-            cart.cartItems.push({ product: productId, price:product.price });
+            cart.products.push({ product: productId, price: product.price });
         }
     }
     calculateTotalCartPrice(cart);
@@ -52,7 +51,7 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         message: 'Product added to cart',
         length: cart.products.length,
         data: cart,
-    }); 
+    });
 });
 
 // Remove product from cart
@@ -137,7 +136,7 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
 //apply coupon
 exports.applyCoupon = asyncHandler(async (req, res, next) => {
     // 1) Get coupon by name
-    const coupon = await Coupon.findOne({ name: req.body.coupon , expirationDate: { $gte: Date.now() } });
+    const coupon = await Coupon.findOne({ name: req.body.coupon, expirationDate: { $gte: Date.now() } });
     if (!coupon) {
         return next(new ApiError(`No coupon found`, 404));
     }
@@ -151,9 +150,9 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
     const totalPrice = cart.totalPrice;
 
     // 3) Calculate total price after discount
-    
+
     const totalPriceAfterDiscount = (
-        totalPrice - 
+        totalPrice -
         (totalPrice * coupon.discountPercentage) / 100
     ).toFixed(2);
 
