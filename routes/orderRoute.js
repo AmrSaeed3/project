@@ -4,10 +4,6 @@ const express = require('express');
 const { protect, allowedTo } = require('../services/auth/index');
 
 
-
-
-module.exports = router;
-const express = require('express');
 const {
     createCashOrder,
     findAllOrders,
