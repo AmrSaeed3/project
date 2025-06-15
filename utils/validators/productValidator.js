@@ -246,8 +246,10 @@ exports.updateProductValidator = [
         .isArray()
         .withMessage("images should be array of string"),
     check("category")
-        .notEmpty()
-        .withMessage("Product must be belong to a category"),
+        .isLength({ min: 3 })
+        .withMessage("Too short category name")
+        .isLength({ max: 23 })
+        .withMessage("Too long category name"),
     check("subcategories")
         .optional()
         .isMongoId()

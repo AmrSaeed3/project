@@ -198,8 +198,6 @@ exports.updateLoggedUserValidator = [
 
     check('phone')
         .optional()
-        .isMobilePhone(['ar-EG'])
-        .withMessage('Invalid phone number format, only Egyptian numbers is supported')
         .isLength({ min: 11, max: 13 })
         .withMessage('Phone number must be between 11 and 13 digits'),
         
@@ -213,7 +211,22 @@ exports.updateLoggedUserValidator = [
         .not()
         .exists()
         .withMessage('You cannot change your role'),
-
+    check('gender')
+        .optional()
+        .isIn(['male', 'female', 'other'])
+        .withMessage('Invalid gender, must be either male, female, or other'),
+    check('birthDate')
+        .optional()
+        .isISO8601()
+        .withMessage('Invalid date format, must be in ISO 8601 format (YYYY-MM-DD)'),
+    check('city')
+        .optional()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('City must be between 2 and 50 characters long'),
+    check('country')
+        .optional()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('Country must be between 2 and 50 characters long'),
     validatorMiddleware,
 ];
 

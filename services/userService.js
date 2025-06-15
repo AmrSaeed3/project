@@ -162,7 +162,12 @@ exports.updateLoggedUserData = asyncHandler(async (req, res, next) => {
         'name',
         'email',
         'phone',
-        'image'
+        'image',
+        'city',
+        'country',
+        'birthDate',
+        'gender'
+
     );
     
     // 3) Update user document
