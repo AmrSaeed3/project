@@ -73,7 +73,7 @@ const userSchema = new mongoose.Schema(
         country: {
             type: String
         },
-        birthday: {
+        birthDate: {
             type: Date
         },
         gender: {
