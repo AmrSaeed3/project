@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const compression = require('compression');
 const session = require('express-session');
+const MongoStore = require('connect-mongo'); // <-- add this line
 const fs = require('fs');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
@@ -43,13 +44,30 @@ app.use(cookieParser());
 app.post('/webhook-stripe', express.raw({ type: 'application/json' }), webhookCheckout);
 
 // Session middleware - MUST be before passport.initialize()
-app.use(session({
+/* app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
+ */
 
+app.use(session({
+  secret: process.env.SESSION_SECRET, // MUST be a strong, random string from environment variables!
+  resave: false, // Don't save session if unmodified
+  saveUninitialized: false, // Don't create session until something stored
+  store: MongoStore.create({
+    mongoUrl: process.env.db_URI, // The URI to your MongoDB database
+    ttl: 14 * 24 * 60 * 60, // Session TTL (Time To Live) in seconds (e.g., 14 days)
+    collectionName: 'sessions', // The collection name in your MongoDB for sessions
+    touchAfter: 24 * 3600 // Update session in DB only once every 24 hours (or other interval)
+  }),
+  cookie: {
+    maxAge: 14 * 24 * 60 * 60 * 1000, // Cookie TTL in milliseconds (e.g., 14 days)
+    secure: process.env.NODE_ENV === 'production', // Set to true for HTTPS in production
+    httpOnly: true // Prevents client-side JS from accessing the cookie
+  }
+}));
 // Initialize Passport
 app.use(passport.initialize());
 app.use(passport.session());
