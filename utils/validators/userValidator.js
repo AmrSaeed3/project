@@ -59,8 +59,6 @@ exports.createUserValidator = [
 
     check('phone')
         .optional()
-        .isMobilePhone(['ar-EG'])
-        .withMessage('Invalid phone number format, only Egyptian numbers is supported')
         .isLength({ min: 11, max: 13 })
         .withMessage('Phone number must be between 11 and 13 digits'),
 
@@ -111,8 +109,6 @@ exports.updateUserValidator = [
 
     check('phone')
         .optional()
-        .isMobilePhone(['ar-EG'])
-        .withMessage('Invalid phone number format, only Egyptian numbers is supported')
         .isLength({ min: 11, max: 13 })
         .withMessage('Phone number must be between 11 and 13 digits'),
 
