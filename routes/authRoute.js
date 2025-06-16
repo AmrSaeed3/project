@@ -22,7 +22,7 @@ const {
     facebookCallback
 } = require('../services/auth/index');
 const { createToken } = require('../services/auth/tokenService');
-const User = require('../models/User');
+const User = require('../models/userModel');
 const { OAuth2Client } = require('google-auth-library');
 const router = express.Router();
 
