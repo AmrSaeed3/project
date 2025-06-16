@@ -27,7 +27,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       // Find or create user in database
-      let user = await User.findOne({ googleId: profile.id,done });
+      let user = await User.findOne({ googleId: profile.id });
 
       if (!user) {
         user = await User.create({
