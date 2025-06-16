@@ -37,7 +37,7 @@ router.put('/resetPassword', resetPasswordValidator, resetPassword);
 router.get('/logout', logout);
 
 // Google OAuth routes
-router.get('/google', googleLogin);
+router.post('/google', googleLogin);
 router.get('/google/callback', googleCallback);
 
 // Facebook OAuth routes
