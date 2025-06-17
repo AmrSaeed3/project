@@ -166,10 +166,19 @@ const createCardOrder = async (session) => {
 
     // 3) Create order with default paymentMethodType card
     const order = await Order.create({
-        user: req.user._id,  // Changed from user._id to req.user._id
+        user: user._id, // استخدام user._id بدلاً من req.user._id
         products: cart.products,
-        shippingAddress: req.body.shippingAddress,  // Get shippingAddress from request body
-        totalOrderPrice,
+        shippingAddress: {
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            postalCode: shippingAddress.postalCode,
+            state: shippingAddress.state,
+            street: shippingAddress.street,
+            country: shippingAddress.country,
+            phone: shippingAddress.phone,
+        },
+        totalOrderPrice: orderPrice,
+        isPaid: true,
         paidAt: Date.now(),
         paymentMethodType: 'card',
     });
