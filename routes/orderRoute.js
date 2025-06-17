@@ -24,7 +24,7 @@ router.use(protect);
 router.route('/:cartId').post(allowedTo('user'), createCashOrder);
 
 
-router.get(
+router.post(
     '/checkout-session/:cartId',
     allowedTo('user'),
     checkoutSession
