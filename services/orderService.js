@@ -31,10 +31,19 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
 
     // 3) Create order with default paymentMethodType cash
     const order = await Order.create({
-        user: req.user._id,
+        user: user._id,
         products: cart.products,
-        shippingAddress: req.body.shippingAddress,
-        totalOrderPrice,
+        shippingAddress: {
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            postalCode: shippingAddress.postal_code,
+            state: shippingAddress.state,
+            street: shippingAddress.street,
+            country: shippingAddress.country,
+            phone: shippingAddress.phone,
+        },
+        totalOrderPrice: totalOrderPrice,
+        paymentMethodType: 'cash',
     });
 
     // 4) After creating order, decrement product quantity, increment product sold
@@ -167,8 +176,16 @@ const createCardOrder = async (session) => {
     const order = await Order.create({
         user: user._id,
         products: cart.products,
-        shippingAddress,
-        totalOrderPrice: oderPrice,
+        shippingAddress: {
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            postalCode: shippingAddress.postal_code,
+            state: shippingAddress.state,
+            street: shippingAddress.street,
+            country: shippingAddress.country,
+            phone: shippingAddress.phone,
+        },
+        totalOrderPrice: totalOrderPrice,
         isPaid: true,
         paidAt: Date.now(),
         paymentMethodType: 'card',

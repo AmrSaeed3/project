@@ -22,9 +22,36 @@ const orderSchema = new mongoose.Schema(
             default:0,
         },
         shippingAddress: {
-            type: String,
-            required: [true, 'shipping address is required'],
+            address: {
+                type: String,
+                required: [true, 'shipping address details are required'],
+            },
+            city: {
+                type: String,
+                required: [true, 'city is required'],
+            },
+            postalCode: {
+                type: String,
+                required: [true, 'postal code is required'],
+            },
+            state: {
+                type: String,
+                required: [true, 'state is required'],
+            },
+            street: {
+                type: String,
+                required: [true, 'street is required'],
+            },
+            country: {
+                type: String,
+                required: [true, 'country is required'],
+            },
+            phone: {
+                type: String,
+                required: [true, 'phone number is required'],
+            },
         },
+
         shippingPrice: {
             type: Number,
             default:0,
