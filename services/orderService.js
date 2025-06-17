@@ -31,18 +31,10 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
 
     // 3) Create order with default paymentMethodType cash
     const order = await Order.create({
-        user: user._id,
+        user: req.user._id,  // Changed from user._id to req.user._id
         products: cart.products,
-        shippingAddress: {
-            address: shippingAddress.address,
-            city: shippingAddress.city,
-            postalCode: shippingAddress.postal_code,
-            state: shippingAddress.state,
-            street: shippingAddress.street,
-            country: shippingAddress.country,
-            phone: shippingAddress.phone,
-        },
-        totalOrderPrice: totalOrderPrice,
+        shippingAddress: req.body.shippingAddress,  // Get shippingAddress from request body
+        totalOrderPrice,
         paymentMethodType: 'cash',
     });
 
