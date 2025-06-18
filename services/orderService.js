@@ -159,14 +159,16 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
 const createCardOrder = async (session) => {
     const cartId = session.client_reference_id;
     const shippingAddress = session.metadata;
-    const oderPrice = session.amount_total / 100;
+    const orderPrice = session.amount_total / 100; // Fixed typo
 
     const cart = await Cart.findById(cartId);
     const user = await User.findOne({ email: session.customer_email });
 
+    if (!cart || !user) return;
+
     // 3) Create order with default paymentMethodType card
     const order = await Order.create({
-        user: user._id, // استخدام user._id بدلاً من req.user._id
+        user: user._id,
         products: cart.products,
         shippingAddress: {
             address: shippingAddress.address,
@@ -197,9 +199,6 @@ const createCardOrder = async (session) => {
     }
 };
 
-// @desc    This webhook will run when stripe payment success paid
-// @route   POST /webhook-checkout
-// @access  Protected/User
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
     const sig = req.headers['stripe-signature'];
 
@@ -216,8 +215,9 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
     }
     if (event.type === 'checkout.session.completed') {
         //  Create order
-        createCardOrder(event.data.object);
+        await createCardOrder(event.data.object); // Await here
     }
 
     res.status(200).json({ received: true });
+    next();
 });
