@@ -171,7 +171,6 @@ const createCardOrder = async (session) => {
         shippingAddress: {
             address: shippingAddress.address,
             city: shippingAddress.city,
-            postalCode: shippingAddress.postalCode,
             state: shippingAddress.state,
             street: shippingAddress.street,
             country: shippingAddress.country,
