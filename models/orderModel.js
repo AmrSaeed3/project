@@ -30,10 +30,6 @@ const orderSchema = new mongoose.Schema(
                 type: String,
                 required: [true, 'city is required'],
             },
-            postalCode: {
-                type: String,
-                required: [true, 'postal code is required'],
-            },
             state: {
                 type: String,
                 required: [true, 'state is required'],
