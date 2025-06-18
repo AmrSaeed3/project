@@ -145,8 +145,8 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
             },
         ],
         mode: 'payment',
-        success_url: `${req.protocol}://${req.get('host')}/orders`,
-        cancel_url: `${req.protocol}://${req.get('host')}/cart`,
+        success_url: `https://project-yhx7.onrender.com/api/v1/orders`, // updated
+        cancel_url: `https://project-yhx7.onrender.com/api/v1/cart`,   // updated
         customer_email: req.user.email,
         client_reference_id: req.params.cartId,
         metadata: req.body.shippingAddress,
