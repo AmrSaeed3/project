@@ -2,10 +2,10 @@ const mongoose = require('mongoose')
 
 const orderSchema = new mongoose.Schema(
     {
-        user:{
-            type : mongoose.Schema.ObjectId,
-            ref:'User',
-            required:[true,'order must be belong to user'],
+        user: {
+            type: mongoose.Schema.ObjectId,
+            ref: 'User',
+            required: [true, 'order must be belong to user'],
         },
         products: [
             {
@@ -14,12 +14,12 @@ const orderSchema = new mongoose.Schema(
                     ref: 'Product',
                 },
                 quantity: Number,
-                price:  Number,
+                price: Number,
             },
         ],
-        taxPrice:{
+        taxPrice: {
             type: Number,
-            default:0,
+            default: 0,
         },
         shippingAddress: {
             address: {
@@ -50,14 +50,17 @@ const orderSchema = new mongoose.Schema(
 
         shippingPrice: {
             type: Number,
-            default:0,
+            default: 0,
         },
         totalOrderPrice: {
             type: Number,
         },
+        totalPriceAfterDiscount: {
+            type: Number,
+        },
         PaymentMethodType: {
             type: String,
-            enum: ['card','cash'],
+            enum: ['card', 'cash'],
             default: 'cash'
         },
         isPaid: {
@@ -80,7 +83,7 @@ orderSchema.pre(/^find/, function (next) {
         select: 'name email phone'
     }).populate({
         path: 'products.product',
-        select: 'name image price'
+        select: 'name imageCover price'
     });
     next();
 });

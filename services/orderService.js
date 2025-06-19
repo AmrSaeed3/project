@@ -31,11 +31,12 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
 
     // 3) Create order with default paymentMethodType cash
     const order = await Order.create({
-        user: req.user._id,  // Changed from user._id to req.user._id
+        user: req.user._id,
         products: cart.products,
-        shippingAddress: req.body.shippingAddress,  // Get shippingAddress from request body
+        shippingAddress: req.body.shippingAddress,
         totalOrderPrice,
-        paymentMethodType: 'cash',
+        totalPriceAfterDiscount: cart.totalPriceAfterDiscount, // <-- add this line
+        paymentMethodType: 'cash', // or 'card'
     });
 
     // 4) After creating order, decrement product quantity, increment product sold
@@ -159,14 +160,13 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
 const createCardOrder = async (session) => {
     const cartId = session.client_reference_id;
     const shippingAddress = session.metadata;
-    const orderPrice = session.amount_total / 100; // Fixed typo
+    const orderPrice = session.amount_total / 100;
 
     const cart = await Cart.findById(cartId);
     const user = await User.findOne({ email: session.customer_email });
 
     if (!cart || !user) return;
 
-    // 3) Create order with default paymentMethodType card
     const order = await Order.create({
         user: user._id,
         products: cart.products,
@@ -179,9 +179,10 @@ const createCardOrder = async (session) => {
             phone: shippingAddress.phone,
         },
         totalOrderPrice: orderPrice,
+        totalPriceAfterDiscount: cart.totalPriceAfterDiscount, // <-- add this line
         isPaid: true,
         paidAt: Date.now(),
-        PaymentMethodType: 'card', // <-- Capital P to match your schema
+        PaymentMethodType: 'card', // use correct field name as in your model
     });
 
     // 4) After creating order, decrement product quantity, increment product sold
