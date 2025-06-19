@@ -74,16 +74,16 @@ const orderSchema = new mongoose.Schema(
         },
         deliveredAt: Date,
     },
-    { Timestamp: true }
+    { timestamps: true }
 );
 
 orderSchema.pre(/^find/, function (next) {
     this.populate({
         path: 'user',
-        select: 'name email phone'
+        select: 'name email phone '
     }).populate({
         path: 'products.product',
-        select: 'name imageCover price'
+        select: 'name imageCover price sizes'
     });
     next();
 });
