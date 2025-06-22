@@ -56,4 +56,5 @@ router.route('/:id')
         allowedTo('admin', 'manager'),
         deleteProductValidator, deleteProductByID);
 
+
 module.exports = router;
