@@ -28,7 +28,7 @@ router.route('/')
     .get(getProduct)
     .post(
         protect,
-        allowedTo('admin', 'manager'),
+        allowedTo('admin'),
         uploadProductImages,
         resizeProductImages,
         validateProductImages,
@@ -45,7 +45,7 @@ router.route('/:id')
     .get(getProductValidator, getProductByID)
     .put(
         protect,
-        allowedTo('admin', 'manager'),
+        allowedTo('admin'),
         uploadProductImages,
         resizeProductImages,
         updateProductValidator,
@@ -53,7 +53,7 @@ router.route('/:id')
     )
     .delete(
         protect,
-        allowedTo('admin', 'manager'),
+        allowedTo('admin'),
         deleteProductValidator, deleteProductByID);
 
 

@@ -36,12 +36,16 @@ app.options('*', cors()); // Enable pre-flight requests for all routes
 app.use(compression());
 
 // middlewares
-app.use(express.json());
+app.use(express.json({ limit: '20kb' }));
 
 app.use(cookieParser());
 
-// checkout webhooks
-app.post('/webhook-stripe', express.raw({ type: 'application/json' }), webhookCheckout);
+// checkout webhooks - this must be before express.json() middleware
+app.post(
+    '/webhook-stripe', 
+    express.raw({ type: 'application/json' }), 
+    webhookCheckout
+);
 
 // Session middleware - MUST be before passport.initialize()
 /* app.use(session({

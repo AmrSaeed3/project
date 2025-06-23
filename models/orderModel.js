@@ -58,7 +58,7 @@ const orderSchema = new mongoose.Schema(
         totalPriceAfterDiscount: {
             type: Number,
         },
-        PaymentMethodType: {
+        paymentMethodType: {
             type: String,
             enum: ['card', 'cash'],
             default: 'cash'
