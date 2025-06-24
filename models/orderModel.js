@@ -13,6 +13,10 @@ const orderSchema = new mongoose.Schema(
                     type: mongoose.Schema.Types.ObjectId,
                     ref: 'Product',
                 },
+                size: {
+                    type: String,
+                    // Not required, will be null/undefined for products without sizes
+                },
                 quantity: Number,
                 price: Number,
             },

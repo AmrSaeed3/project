@@ -32,11 +32,11 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
     // 3) Create order with default paymentMethodType cash
     const order = await Order.create({
         user: req.user._id,
-        products: cart.products,
+        products: cart.products, // This now includes size information
         shippingAddress: req.body.shippingAddress,
         totalOrderPrice,
-        totalPriceAfterDiscount: cart.totalPriceAfterDiscount, // <-- add this line
-        paymentMethodType: 'cash', // or 'card'
+        totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
+        paymentMethodType: 'cash',
     });
 
     // 4) After creating order, decrement product quantity, increment product sold
@@ -189,34 +189,52 @@ const createCardOrder = async (session) => {
         const orderPrice = session.amount_total / 100;
 
         console.log('Cart ID:', cartId);
-        console.log('Shipping Address:', shippingAddress);
+        console.log('Shipping Address:', JSON.stringify(shippingAddress));
         console.log('Order Price:', orderPrice);
 
         // Find the cart
         const cart = await Cart.findById(cartId);
         if (!cart) {
             console.error(`Cart not found with ID: ${cartId}`);
-            return;
+            return null;
         }
+        console.log('Cart found:', cart._id);
+        console.log('Cart products:', JSON.stringify(cart.products));
 
         // Find the user
         const user = await User.findOne({ email: session.customer_email });
         if (!user) {
             console.error(`User not found with email: ${session.customer_email}`);
-            return;
+            return null;
         }
+        console.log('User found:', user._id);
 
         // Validate shipping address
         if (!shippingAddress || !shippingAddress.address) {
             console.error('Invalid shipping address in session metadata');
-            console.log('Session metadata:', session.metadata);
-            return;
+            console.log('Session metadata:', JSON.stringify(session.metadata));
+            return null;
         }
 
         // Create the order
+        console.log('Creating order with data:', {
+            user: user._id,
+            productsCount: cart.products.length,
+            shippingAddress: {
+                address: shippingAddress.address || '',
+                city: shippingAddress.city || '',
+                state: shippingAddress.state || '',
+                street: shippingAddress.street || '',
+                country: shippingAddress.country || '',
+                phone: shippingAddress.phone || '',
+            },
+            totalOrderPrice: orderPrice,
+            totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
+        });
+        
         const order = await Order.create({
             user: user._id,
-            products: cart.products,
+            products: cart.products, // This now includes size information
             shippingAddress: {
                 address: shippingAddress.address || '',
                 city: shippingAddress.city || '',
@@ -229,7 +247,7 @@ const createCardOrder = async (session) => {
             totalPriceAfterDiscount: cart.totalPriceAfterDiscount,
             isPaid: true,
             paidAt: Date.now(),
-            paymentMethodType: 'card',  // Changed from PaymentMethodType to paymentMethodType
+            paymentMethodType: 'card',
         });
 
         console.log('Order created:', order._id);
@@ -253,7 +271,8 @@ const createCardOrder = async (session) => {
         return order;
     } catch (error) {
         console.error('Error in createCardOrder:', error);
-        throw error; // Re-throw to be caught by the webhook handler
+        console.error(error.stack);
+        throw error;
     }
 };
 

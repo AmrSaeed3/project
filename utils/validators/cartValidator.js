@@ -18,6 +18,24 @@ exports.addToCartValidator = [
                 }
             });
         }),
+    check('size')
+        .optional() // Make size optional
+        .custom((val, { req }) => {
+            return Product.findById(req.body.productId).then((product) => {
+                if (!product) {
+                    return Promise.reject(
+                        new Error(`No product found for this ID: ${req.body.productId}`)
+                    );
+                }
+                // Only validate size if the product has sizes and a size was provided
+                if (val && product.sizes && product.sizes.length > 0 && !product.sizes.includes(val)) {
+                    return Promise.reject(
+                        new Error(`Size ${val} is not available for this product`)
+                    );
+                }
+                return true;
+            });
+        }),
     validatorMiddleware,
 ];
 
@@ -26,16 +44,9 @@ exports.removeFromCartValidator = [
         .notEmpty()
         .withMessage('Product ID is required')
         .isMongoId()
-        .withMessage('Invalid product ID format')
-        .custom((val) => {
-            return Product.findById(val).then((product) => {
-                if (!product) {
-                    return Promise.reject(
-                        new Error(`No product found for this ID: ${val}`)
-                    );
-                }
-            });
-        }),
+        .withMessage('Invalid product ID format'),
+    check('size')
+        .optional(), // Make size optional
     validatorMiddleware,
 ];
 
@@ -54,6 +65,8 @@ exports.updateCartItemQuantityValidator = [
                 }
             });
         }),
+    check('size')
+        .optional(), // Make size optional
     check('quantity')
         .notEmpty()
         .withMessage('Quantity is required')

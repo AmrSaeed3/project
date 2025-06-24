@@ -14,6 +14,10 @@ const cartSchema = new mongoose.Schema(
                     ref: 'Product',
                     required: [true, 'Cart item must belong to a product']
                 },
+                size: {
+                    type: String,
+                    // Not required, will be null/undefined for products without sizes
+                },
                 quantity: {
                     type: Number,
                     required: [true, 'Cart item quantity required'],
@@ -24,7 +28,6 @@ const cartSchema = new mongoose.Schema(
                     type: Number,
                     required: [true, 'Cart item price required'],
                 },
-
             },
         ],
         totalPrice: {

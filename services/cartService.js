@@ -18,33 +18,59 @@ const calculateTotalCartPrice = (cart) => {
 
 // Add product to cart
 exports.addToCart = asyncHandler(async (req, res, next) => {
-    const { productId } = req.body;
+    const { productId, size } = req.body;
 
     const product = await Product.findById(productId);
+    if (!product) {
+        return next(new ApiError(`No product found for this ID: ${productId}`, 404));
+    }
+
+    // Validate that the size exists for this product if it has sizes
+    if (size && product.sizes && product.sizes.length > 0 && !product.sizes.includes(size)) {
+        return next(new ApiError(`Size ${size} is not available for this product`, 400));
+    }
 
     let cart = await Cart.findOne({ user: req.user.id });
 
     if (!cart) {
         cart = await Cart.create({
             user: req.user.id,
-            products: [{ product: productId, price: product.price }],
+            products: [{ 
+                product: productId, 
+                size: size || null, // Use null if no size provided
+                price: product.price 
+            }],
         });
     } else {
+        // Find if the same product with the same size already exists in cart
         const productIndex = cart.products.findIndex(
-            (item) => item.product.toString() === productId
+            (item) => {
+                if (size) {
+                    // If size is provided, match product and size
+                    return item.product.toString() === productId && item.size === size;
+                } else {
+                    // If no size provided, match product and ensure item has no size
+                    return item.product.toString() === productId && !item.size;
+                }
+            }
         );
 
         if (productIndex > -1) {
+            // If product with same size exists, increase quantity
             const cartItem = cart.products[productIndex];
             cartItem.quantity += 1;
             cart.products[productIndex] = cartItem;
         } else {
-            cart.products.push({ product: productId, price: product.price });
+            // If product with this size doesn't exist, add new item
+            cart.products.push({ 
+                product: productId, 
+                size: size || null, // Use null if no size provided
+                price: product.price 
+            });
         }
     }
     calculateTotalCartPrice(cart);
     cart.totalPriceAfterDiscount = cart.totalPrice;
-
 
     await cart.save();
 
@@ -58,13 +84,32 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
 
 // Remove product from cart
 exports.removeFromCart = asyncHandler(async (req, res, next) => {
+    const { productId, size } = req.body;
+    
+    // Create a filter based on whether size is provided
+    const filter = { user: req.user.id };
+    const pullCondition = { product: productId };
+    
+    if (size) {
+        pullCondition.size = size;
+    } else {
+        pullCondition.size = { $exists: false };
+    }
+    
     const cart = await Cart.findOneAndUpdate(
-        { user: req.user.id },
-        { $pull: { products: { product: req.body.productId } } },
+        filter,
+        { $pull: { products: pullCondition } },
         { new: true }
     );
+    
+    if (!cart) {
+        return next(new ApiError(`No cart found for this user`, 404));
+    }
+    
     calculateTotalCartPrice(cart);
     cart.totalPriceAfterDiscount = cart.totalPrice;
+
+    await cart.save();
 
     res.status(200).json({
         status: 'success',
@@ -79,7 +124,7 @@ exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
     const cart = await Cart.findOne({ user: req.user.id })
         .populate({
             path: 'products.product',
-            select: 'imageCover name price id'
+            select: 'imageCover name price id sizes'
         });
 
     if (!cart) {
@@ -109,15 +154,24 @@ exports.clearCart = asyncHandler(async (req, res, next) => {
 
 // Update cart item quantity
 exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
-    const { quantity } = req.body;
+    const { productId, size, quantity } = req.body;
     const cart = await Cart.findOne({ user: req.user.id });
 
     if (!cart) {
         return next(new ApiError(`No cart found for this user`, 404));
     }
 
+    // Find the product in the cart
     const productIndex = cart.products.findIndex(
-        (item) => item.product.toString() === req.body.productId
+        (item) => {
+            if (size) {
+                // If size is provided, match product and size
+                return item.product.toString() === productId && item.size === size;
+            } else {
+                // If no size provided, match product and ensure item has no size
+                return item.product.toString() === productId && !item.size;
+            }
+        }
     );
 
     if (productIndex > -1) {
@@ -125,8 +179,9 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
         cartItem.quantity = quantity;
         cart.products[productIndex] = cartItem;
     } else {
-        return next(new ApiError(`No product found in cart`, 404));
+        return next(new ApiError(`Product not found in cart`, 404));
     }
+    
     calculateTotalCartPrice(cart);
     cart.totalPriceAfterDiscount = cart.totalPrice;
 
@@ -135,7 +190,7 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         length: cart.products.length,
-        message: 'Quantity reduced',
+        message: 'Quantity updated',
         data: cart,
     });
 });
