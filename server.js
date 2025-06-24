@@ -28,24 +28,22 @@ dbConection();
 // express app
 const app = express();
 
-
 app.use(cors());
 app.options('*', cors()); // Enable pre-flight requests for all routes
 
 // Enable compression for better performance
 app.use(compression());
 
-// middlewares
-app.use(express.json({ limit: '20kb' }));
-
-app.use(cookieParser());
-
-// checkout webhooks - this must be before express.json() middleware
+// checkout webhooks - MUST be before express.json() middleware
 app.post(
-    '/webhook-stripe', 
-    express.raw({ type: 'application/json' }), 
-    webhookCheckout
+  '/webhook-stripe',
+  express.raw({ type: 'application/json' }),
+  webhookCheckout
 );
+
+// Regular middlewares - AFTER the webhook route
+app.use(express.json({ limit: '20kb' }));
+app.use(cookieParser());
 
 // Session middleware - MUST be before passport.initialize()
 /* app.use(session({
