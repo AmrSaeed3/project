@@ -95,7 +95,6 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
     if (req.files.imageCover) {
         // Resize image
         const processedImageBuffer = await sharp(req.files.imageCover[0].buffer)
-            .resize(2000, 1333)
             .toFormat('jpeg')
             .jpeg({ quality: 95 })
             .toBuffer();
@@ -115,7 +114,6 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
         const uploadPromises = req.files.images.map(async (img, index) => {
             // Resize image
             const processedImageBuffer = await sharp(img.buffer)
-                .resize(2000, 1333)
                 .toFormat('jpeg')
                 .jpeg({ quality: 95 })
                 .toBuffer();
@@ -164,7 +162,6 @@ exports.resizeUserImage = asyncHandler(async (req, res, next) => {
 
     // Process and resize user image
     const processedImageBuffer = await sharp(req.file.buffer)
-        .resize(500, 500)  // Square profile image
         .toFormat('jpeg')
         .jpeg({ quality: 90 })
         .toBuffer();
