@@ -23,6 +23,20 @@ const {
 
 const router = express.Router();
 
+// Middleware to parse sizes field
+function parseSizesField(req, res, next) {
+    if (typeof req.body.sizes === 'string') {
+        try {
+            // Try to parse as JSON array
+            req.body.sizes = JSON.parse(req.body.sizes);
+        } catch {
+            // If not JSON, wrap as array
+            req.body.sizes = [req.body.sizes];
+        }
+    }
+    next();
+}
+
 // /api/v1/products
 router.route('/')
     .get(getProduct)
@@ -32,6 +46,7 @@ router.route('/')
         uploadProductImages,
         resizeProductImages,
         validateProductImages,
+        parseSizesField, // <-- Add this line
         createProductValidator,
         createProduct
     );

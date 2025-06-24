@@ -76,7 +76,11 @@ exports.removeFromCart = asyncHandler(async (req, res, next) => {
 
 // Get user cart
 exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
-    const cart = await Cart.findOne({ user: req.user.id });
+    const cart = await Cart.findOne({ user: req.user.id })
+        .populate({
+            path: 'products.product',
+            select: 'imageCover name price'
+        });
 
     if (!cart) {
         return next(new ApiError(`No cart found for this user`, 404));
