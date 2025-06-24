@@ -79,7 +79,7 @@ exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
     const cart = await Cart.findOne({ user: req.user.id })
         .populate({
             path: 'products.product',
-            select: 'imageCover name price'
+            select: 'imageCover name price id'
         });
 
     if (!cart) {
