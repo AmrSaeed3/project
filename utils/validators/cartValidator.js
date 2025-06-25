@@ -19,7 +19,10 @@ exports.addToCartValidator = [
             });
         }),
     check('size')
-        .optional() // Make size optional
+        .notEmpty()
+        .withMessage('Size is required')
+        .isString()
+        .withMessage('Size must be a string')
         .custom((val, { req }) => {
             return Product.findById(req.body.productId).then((product) => {
                 if (!product) {
@@ -46,7 +49,10 @@ exports.removeFromCartValidator = [
         .isMongoId()
         .withMessage('Invalid product ID format'),
     check('size')
-        .optional(), // Make size optional
+        .notEmpty()
+        .withMessage('Size is required')
+        .isString()
+        .withMessage('Size must be a string'),
     validatorMiddleware,
 ];
 
@@ -66,7 +72,10 @@ exports.updateCartItemQuantityValidator = [
             });
         }),
     check('size')
-        .optional(), // Make size optional
+        .notEmpty()
+        .withMessage('Size is required')
+        .isString()
+        .withMessage('Size must be a string'),
     check('quantity')
         .notEmpty()
         .withMessage('Quantity is required')
