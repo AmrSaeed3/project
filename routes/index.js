@@ -12,6 +12,8 @@ const CouponRoute = require('./couponRoute');
 const CartRoute = require('./cartRoute');
 const OrderRoute = require('./orderRoute');
 const llmSearchRoute = require('./llmSearchRoute');
+const ContactUsRoute = require('./contactUsRoute');
+
 
 
 
@@ -33,6 +35,7 @@ app.use('/api/v1/coupon', CouponRoute);
 app.use('/api/v1/cart', CartRoute);
 app.use('/api/v1/orders', OrderRoute);
 app.use('/api/v1/llm-search', llmSearchRoute);
+app.use('/api/v1/contactUs', ContactUsRoute);
 };
 
 module.exports = mountRoutes;

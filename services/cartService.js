@@ -84,7 +84,7 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
 
 // Remove product from cart
 exports.removeFromCart = asyncHandler(async (req, res, next) => {
-    const { productId, size } = req.body;
+ 
     
     // Create a filter based on whether size is provided
     const filter = { user: req.user.id };
