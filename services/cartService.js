@@ -35,10 +35,10 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
     if (!cart) {
         cart = await Cart.create({
             user: req.user.id,
-            products: [{ 
-                product: productId, 
+            products: [{
+                product: productId,
                 size: size || null, // Use null if no size provided
-                price: product.price 
+                price: product.price
             }],
         });
     } else {
@@ -62,10 +62,10 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
             cart.products[productIndex] = cartItem;
         } else {
             // If product with this size doesn't exist, add new item
-            cart.products.push({ 
-                product: productId, 
+            cart.products.push({
+                product: productId,
                 size: size || null, // Use null if no size provided
-                price: product.price 
+                price: product.price
             });
         }
     }
@@ -84,28 +84,28 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
 
 // Remove product from cart
 exports.removeFromCart = asyncHandler(async (req, res, next) => {
- 
-    
+
+
     // Create a filter based on whether size is provided
     const filter = { user: req.user.id };
     const pullCondition = { product: productId };
-    
+
     if (size) {
         pullCondition.size = size;
     } else {
         pullCondition.size = { $exists: false };
     }
-    
+
     const cart = await Cart.findOneAndUpdate(
         filter,
         { $pull: { products: pullCondition } },
         { new: true }
     );
-    
+
     if (!cart) {
         return next(new ApiError(`No cart found for this user`, 404));
     }
-    
+
     calculateTotalCartPrice(cart);
     cart.totalPriceAfterDiscount = cart.totalPrice;
 
@@ -181,7 +181,7 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
     } else {
         return next(new ApiError(`Product not found in cart`, 404));
     }
-    
+
     calculateTotalCartPrice(cart);
     cart.totalPriceAfterDiscount = cart.totalPrice;
 

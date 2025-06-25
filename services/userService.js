@@ -241,5 +241,4 @@ exports.deleteLoggedUserAccount = asyncHandler(async (req, res, next) => {
         message: 'User account deleted successfully',
         data: null
     });
-    next();
 });
