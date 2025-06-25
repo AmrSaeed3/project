@@ -5,7 +5,7 @@ const {
     removeFromCartValidator,
     updateCartItemQuantityValidator,
     applyCouponValidator,
-    
+
 } = require('../utils/validators/cartValidator');
 
 const {
@@ -39,6 +39,7 @@ router.route('/update')
 // /api/cart/apply-coupon
 router.route('/apply-coupon')
     .post(protect, applyCouponValidator, applyCoupon);
+
 
 module.exports = router;
 

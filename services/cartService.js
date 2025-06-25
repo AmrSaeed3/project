@@ -84,31 +84,28 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
 
 // Remove product from cart
 exports.removeFromCart = asyncHandler(async (req, res, next) => {
+    const { productId, size } = req.body;
 
-
-    // Create a filter based on whether size is provided
-    const filter = { user: req.user.id };
+    // Build the pull condition
     const pullCondition = { product: productId };
+    if (size) pullCondition.size = size;
 
-    if (size) {
-        pullCondition.size = size;
-    } else {
-        pullCondition.size = { $exists: false };
-    }
-
+    // Remove the product from the cart's products array
     const cart = await Cart.findOneAndUpdate(
-        filter,
+        { user: req.user.id },
         { $pull: { products: pullCondition } },
         { new: true }
-    );
+    ).populate({
+        path: 'products.product',
+        select: 'imageCover name price id sizes'
+    });
 
     if (!cart) {
         return next(new ApiError(`No cart found for this user`, 404));
     }
 
+    // Optionally, recalculate total price
     calculateTotalCartPrice(cart);
-    cart.totalPriceAfterDiscount = cart.totalPrice;
-
     await cart.save();
 
     res.status(200).json({
@@ -154,7 +151,8 @@ exports.clearCart = asyncHandler(async (req, res, next) => {
 
 // Update cart item quantity
 exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
-    const { productId, size, quantity } = req.body;
+    const { productId, size, quantity } = req.body; // <-- Already present, keep it
+
     const cart = await Cart.findOne({ user: req.user.id });
 
     if (!cart) {
