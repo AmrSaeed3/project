@@ -4,6 +4,7 @@ const factory = require("./handlersFactory");
 const { uploadProductImages, resizeProductImages } = require('../middleware/uploadImageMiddleware');
 const ApiError = require('../utils/apiError');
 const ProductSimilarity = require('../models/productSimilarityModel');
+const User = require('../models/userModel');
 
 // Export the image upload middlewares
 exports.uploadProductImages = uploadProductImages;
@@ -41,16 +42,16 @@ exports.deleteProductByID = factory.deleteOne(Product);
 // Get similar products for a specific product
 exports.getSimilarProducts = asyncHandler(async (req, res, next) => {
     const { productId } = req.params;
-    
+
     // Validate product exists
     const product = await Product.findById(productId);
     if (!product) {
         return next(new ApiError(`No product found with ID: ${productId}`, 404));
     }
-    
+
     // Find similar products from the ProductSimilarity collection
     const similarityData = await ProductSimilarity.findOne({ productId });
-    
+
     if (!similarityData || !similarityData.similarProducts || similarityData.similarProducts.length === 0) {
         return res.status(200).json({
             status: 'success',
@@ -58,10 +59,10 @@ exports.getSimilarProducts = asyncHandler(async (req, res, next) => {
             data: []
         });
     }
-    
+
     // Get the number of similar products to return (default to 5)
     const limit = req.query.limit ? parseInt(req.query.limit) : 5;
-    
+
     // Get top similar products with their IDs and scores
     const topSimilarProducts = similarityData.similarProducts
         .slice(0, limit)
@@ -69,32 +70,58 @@ exports.getSimilarProducts = asyncHandler(async (req, res, next) => {
             similarProductId: item.similarProductId,
             similarityScore: item.similarityScore
         }));
-    
+
     // Extract just the IDs for the query
     const productIds = topSimilarProducts.map(item => item.similarProductId);
-    
+
     // Fetch the actual product data
     const similarProductsData = await Product.find(
         { _id: { $in: productIds } },
         'name imageCover price slug ratingsAverage ratingsQuantity description'
     );
-    
+
     // Create a map for quick lookup
     const productMap = {};
     similarProductsData.forEach(product => {
         productMap[product._id.toString()] = product;
     });
-    
+
     // Combine similarity scores with product data
     const result = topSimilarProducts.map(item => ({
         product: productMap[item.similarProductId.toString()],
         similarityScore: item.similarityScore
     }));
-    
+
     res.status(200).json({
         status: 'success',
         results: result.length,
         data: result
+    });
+});
+
+// You can use any logo URL or SVG you want
+
+exports.getProductsWithWishlistStatus = asyncHandler(async (req, res) => {
+    // 1. Get user from token (req.user is set by protect middleware)
+    const user = await User.findById(req.user._id).select('wishlist');
+    const wishlist = user?.wishlist?.map(id => id.toString()) || [];
+
+    // 2. Get all products
+    const products = await Product.find();
+
+    // 3. Add isWishlisted to each product
+    const productsWithWishlist = products.map(product => {
+        const prod = product.toObject();
+        return {
+            ...prod,
+            isWishlisted: wishlist.includes(prod._id.toString())
+        };
+    });
+
+    // 4. Send response
+    res.status(200).json({
+        results: productsWithWishlist.length,
+        data: productsWithWishlist
     });
 });
 

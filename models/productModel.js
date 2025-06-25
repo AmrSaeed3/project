@@ -73,7 +73,11 @@ const productSchema = new mongoose.Schema(
         sizes: {
             type: [String],
             default: [],
-        }
+        },
+        isWishlisted: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

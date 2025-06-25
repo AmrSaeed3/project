@@ -226,6 +226,7 @@ exports.updateLoggedUserPassword = asyncHandler(async (req, res, next) => {
         message: 'Password updated successfully',
         token
     });
+    
 });
 
 // Delete logged user account (soft delete)
@@ -240,4 +241,5 @@ exports.deleteLoggedUserAccount = asyncHandler(async (req, res, next) => {
         message: 'User account deleted successfully',
         data: null
     });
+    next();
 });

@@ -311,4 +311,5 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
 
     // Always return a 200 response to acknowledge receipt of the webhook
     res.status(200).json({ received: true });
+    next();
 });

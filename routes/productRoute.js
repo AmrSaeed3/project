@@ -18,7 +18,8 @@ const {
     uploadProductImages,
     resizeProductImages,
     validateProductImages,
-    getSimilarProducts
+    getSimilarProducts,
+    getProductsWithWishlistStatus
 } = require("../services/productService");
 
 const router = express.Router();
@@ -53,7 +54,8 @@ router.route('/')
 
 // Add this route to your product routes
 router.get('/:productId/similar', getSimilarProducts);
-
+// Wishlist and Compare route
+router.get('/wishlist-compare', protect, getProductsWithWishlistStatus);
 
 // /api/v1/products/:id
 router.route('/:id')
