@@ -51,4 +51,5 @@ exports.getWishlist = asyncHandler(async (req, res, next) => {
         results: user.wishlist.length,
         data: user.wishlist
     });
+    next();
 });
