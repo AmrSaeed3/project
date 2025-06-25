@@ -96,7 +96,7 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
         // Resize image
         const processedImageBuffer = await sharp(req.files.imageCover[0].buffer)
             .toFormat('jpeg')
-            .jpeg({ quality: 95 })
+            .jpeg({ quality: 100 })
             .toBuffer();
         
         // Upload to Cloudinary
@@ -115,7 +115,7 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
             // Resize image
             const processedImageBuffer = await sharp(img.buffer)
                 .toFormat('jpeg')
-                .jpeg({ quality: 95 })
+                .jpeg({ quality: 100 })
                 .toBuffer();
             
             // Upload to Cloudinary

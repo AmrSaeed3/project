@@ -86,12 +86,43 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
 exports.removeFromCart = asyncHandler(async (req, res, next) => {
     const { productId, size } = req.body;
 
+    // Find the user's cart
+    const cart = await Cart.findOne({ user: req.user.id });
+    if (!cart) {
+        return next(new ApiError(`No cart found for this user`, 404));
+    }
+
+    // Find the product in the cart
+    const cartItem = cart.products.find(
+        (item) => item.product.toString() === productId
+    );
+
+    if (!cartItem) {
+        return next(new ApiError(`Product not found in cart`, 404));
+    }
+
+    // Enforce size logic
+    if (cartItem.size) {
+        // Product in cart has a size, so size must be provided and match
+        if (!size) {
+            return next(new ApiError(`You must provide size for this product`, 400));
+        }
+        if (cartItem.size !== size) {
+            return next(new ApiError(`Size does not match the product in cart`, 400));
+        }
+    } else {
+        // Product in cart does not have a size, so size must NOT be provided
+        if (size) {
+            return next(new ApiError(`This product does not have size, do not send size`, 400));
+        }
+    }
+
     // Build the pull condition
     const pullCondition = { product: productId };
-    if (size) pullCondition.size = size;
+    if (cartItem.size) pullCondition.size = cartItem.size;
 
     // Remove the product from the cart's products array
-    const cart = await Cart.findOneAndUpdate(
+    const updatedCart = await Cart.findOneAndUpdate(
         { user: req.user.id },
         { $pull: { products: pullCondition } },
         { new: true }
@@ -100,19 +131,15 @@ exports.removeFromCart = asyncHandler(async (req, res, next) => {
         select: 'imageCover name price id sizes'
     });
 
-    if (!cart) {
-        return next(new ApiError(`No cart found for this user`, 404));
-    }
-
-    // Optionally, recalculate total price
-    calculateTotalCartPrice(cart);
-    await cart.save();
+    // Recalculate total price
+    calculateTotalCartPrice(updatedCart);
+    await updatedCart.save();
 
     res.status(200).json({
         status: 'success',
-        length: cart.products.length,
+        length: updatedCart.products.length,
         message: 'Product removed from cart',
-        data: cart,
+        data: updatedCart,
     });
 });
 
@@ -151,7 +178,7 @@ exports.clearCart = asyncHandler(async (req, res, next) => {
 
 // Update cart item quantity
 exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
-    const { productId, size, quantity } = req.body; // <-- Already present, keep it
+    const { productId, size, quantity } = req.body;
 
     const cart = await Cart.findOne({ user: req.user.id });
 
@@ -161,24 +188,34 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
 
     // Find the product in the cart
     const productIndex = cart.products.findIndex(
-        (item) => {
-            if (size) {
-                // If size is provided, match product and size
-                return item.product.toString() === productId && item.size === size;
-            } else {
-                // If no size provided, match product and ensure item has no size
-                return item.product.toString() === productId && !item.size;
-            }
-        }
+        (item) => item.product.toString() === productId
     );
 
-    if (productIndex > -1) {
-        const cartItem = cart.products[productIndex];
-        cartItem.quantity = quantity;
-        cart.products[productIndex] = cartItem;
-    } else {
+    if (productIndex === -1) {
         return next(new ApiError(`Product not found in cart`, 404));
     }
+
+    const cartItem = cart.products[productIndex];
+
+    // Enforce size logic (same as removeFromCart)
+    if (cartItem.size) {
+        // Product in cart has a size, so size must be provided and match
+        if (!size) {
+            return next(new ApiError(`You must provide size for this product`, 400));
+        }
+        if (cartItem.size !== size) {
+            return next(new ApiError(`Size does not match the product in cart`, 400));
+        }
+    } else {
+        // Product in cart does not have a size, so size must NOT be provided
+        if (size) {
+            return next(new ApiError(`This product does not have size, do not send size`, 400));
+        }
+    }
+
+    // Update quantity
+    cartItem.quantity = quantity;
+    cart.products[productIndex] = cartItem;
 
     calculateTotalCartPrice(cart);
     cart.totalPriceAfterDiscount = cart.totalPrice;
