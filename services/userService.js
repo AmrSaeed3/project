@@ -90,7 +90,7 @@ exports.toggleUserActiveStatus = asyncHandler(async (req, res, next) => {
     });
 });
 
-// Change user password (admin only)
+// Change user password 
 exports.changeUserPassword = asyncHandler(async (req, res, next) => {
     // 1) Get user by id with password field (which is normally excluded)
     const user = await User.findById(req.params.id).select('+password');
