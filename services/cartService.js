@@ -18,7 +18,7 @@ const calculateTotalCartPrice = (cart) => {
 
 // Add product to cart
 exports.addToCart = asyncHandler(async (req, res, next) => {
-    const { productId, size } = req.body;
+    const { productId, size, quantity } = req.body;
 
     const product = await Product.findById(productId);
     if (!product) {
@@ -30,6 +30,9 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         return next(new ApiError(`Size ${size} is not available for this product`, 400));
     }
 
+    // Default quantity to 1 if not provided or invalid
+    const qty = (typeof quantity === 'number' && quantity > 0) ? quantity : 1;
+
     let cart = await Cart.findOne({ user: req.user.id });
 
     if (!cart) {
@@ -37,8 +40,9 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
             user: req.user.id,
             products: [{
                 product: productId,
-                size: size || null, // Use null if no size provided
-                price: product.price
+                size: size || null,
+                price: product.price,
+                quantity: qty
             }],
         });
     } else {
@@ -46,10 +50,8 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         const productIndex = cart.products.findIndex(
             (item) => {
                 if (size) {
-                    // If size is provided, match product and size
                     return item.product.toString() === productId && item.size === size;
                 } else {
-                    // If no size provided, match product and ensure item has no size
                     return item.product.toString() === productId && !item.size;
                 }
             }
@@ -58,14 +60,15 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         if (productIndex > -1) {
             // If product with same size exists, increase quantity
             const cartItem = cart.products[productIndex];
-            cartItem.quantity += 1;
+            cartItem.quantity += qty;
             cart.products[productIndex] = cartItem;
         } else {
             // If product with this size doesn't exist, add new item
             cart.products.push({
                 product: productId,
-                size: size || null, // Use null if no size provided
-                price: product.price
+                size: size || null,
+                price: product.price,
+                quantity: qty
             });
         }
     }

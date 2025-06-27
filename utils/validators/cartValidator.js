@@ -18,6 +18,12 @@ exports.addToCartValidator = [
                 }
             });
         }),
+    check('quantity')
+        .optional()
+        .isNumeric()
+        .withMessage('Quantity must be a number')
+        .isLength({ min: 1 })
+        .withMessage('Quantity must be positive'),
     check('size')
         .notEmpty()
         .withMessage('Size is required')
