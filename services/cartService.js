@@ -25,6 +25,11 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         return next(new ApiError(`No product found for this ID: ${productId}`, 404));
     }
 
+    // Reject if product is out of stock
+    if (product.quantity === 0) {
+        return next(new ApiError(`Product is out of stock`, 400));
+    }
+
     //check quantity in stock
     if (product.quantity < quantity) {
         return next(new ApiError(`Product quantity is not enough`, 400));
