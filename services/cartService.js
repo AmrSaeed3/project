@@ -69,7 +69,8 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         );
 
         if (productIndex > -1) {
-            // If product with same size exists, increase quantity
+            // If product with same size exists, increase quantity and decrement product quantity,
+            await Product.findByIdAndUpdate(productId, { $inc: { quantity: -qty } });
             const cartItem = cart.products[productIndex];
             cartItem.quantity += qty;
             cart.products[productIndex] = cartItem;
@@ -201,7 +202,6 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
     const { productId, size, quantity } = req.body;
 
     const cart = await Cart.findOne({ user: req.user.id });
-
     if (!cart) {
         return next(new ApiError(`No cart found for this user`, 404));
     }
@@ -219,7 +219,6 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
 
     // Enforce size logic (same as removeFromCart)
     if (cartItem.size) {
-        // Product in cart has a size, so size must be provided and match
         if (!size) {
             return next(new ApiError(`You must provide size for this product`, 400));
         }
@@ -227,18 +226,35 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
             return next(new ApiError(`Size does not match the product in cart`, 400));
         }
     } else {
-        // Product in cart does not have a size, so size must NOT be provided
         if (size) {
             return next(new ApiError(`This product does not have size, do not send size`, 400));
         }
     }
-    //check quantity in stock
+
+    // Get the product from DB
     const product = await Product.findById(productId);
-    if (product.quantity < quantity) {
-        return next(new ApiError(`Product quantity is not enough`, 400));
+    if (!product) {
+        return next(new ApiError(`No product found for this ID: ${productId}`, 404));
     }
 
-    // Update quantity
+    // Calculate the difference
+    const diff = quantity - cartItem.quantity;
+
+    // If increasing, check stock
+    if (diff > 0) {
+        if (product.quantity < diff) {
+            return next(new ApiError(`Product quantity is not enough`, 400));
+        }
+        // Decrement product stock
+        await Product.findByIdAndUpdate(productId, { $inc: { quantity: -diff } });
+    } else if (diff < 0) {
+        // Increment product stock
+        await Product.findByIdAndUpdate(productId, { $inc: { quantity: Math.abs(diff) } });
+    }
+    // If diff == 0, do nothing
+
+
+    // Update quantity in cart
     cartItem.quantity = quantity;
     cart.products[productIndex] = cartItem;
 

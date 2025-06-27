@@ -39,12 +39,12 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
         paymentMethodType: 'cash',
     });
 
-    // 4) After creating order, decrement product quantity, increment product sold
+    // 4) After creating order,  increment product sold
     if (order) {
         const bulkOption = cart.products.map((item) => ({
             updateOne: {
                 filter: { _id: item.product },
-                update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+                update: { $inc: {  sold: +item.quantity } },
             },
         }));
         await Product.bulkWrite(bulkOption, {});
@@ -257,7 +257,7 @@ const createCardOrder = async (session) => {
             const bulkOption = cart.products.map((item) => ({
                 updateOne: {
                     filter: { _id: item.product },
-                    update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+                    update: { $inc: {sold: +item.quantity} },
                 },
             }));
             await Product.bulkWrite(bulkOption, {});
