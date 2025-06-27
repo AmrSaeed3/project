@@ -25,6 +25,11 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         return next(new ApiError(`No product found for this ID: ${productId}`, 404));
     }
 
+    //check quantity in stock
+    if (product.quantity < quantity) {
+        return next(new ApiError(`Product quantity is not enough`, 400));
+    }
+
     // Validate that the size exists for this product if it has sizes
     if (size && product.sizes && product.sizes.length > 0 && !product.sizes.includes(size)) {
         return next(new ApiError(`Size ${size} is not available for this product`, 400));
@@ -33,6 +38,12 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
     // Default quantity to 1 if not provided or invalid
     const qty = (typeof quantity === 'number' && quantity > 0) ? quantity : 1;
 
+    //check quantity in stock
+    if (product.quantity < qty) {
+        return next(new ApiError(`Product quantity is not enough`, 400));
+    }
+
+    // Find the user's cart
     let cart = await Cart.findOne({ user: req.user.id });
 
     if (!cart) {
@@ -123,6 +134,8 @@ exports.removeFromCart = asyncHandler(async (req, res, next) => {
     // Build the pull condition
     const pullCondition = { product: productId };
     if (cartItem.size) pullCondition.size = cartItem.size;
+    //return quantity to product quantity
+    await Product.findByIdAndUpdate(productId, { $inc: { quantity: cartItem.quantity } });
 
     // Remove the product from the cart's products array
     const updatedCart = await Cart.findOneAndUpdate(
@@ -172,6 +185,10 @@ exports.clearCart = asyncHandler(async (req, res, next) => {
     if (!cart) {
         return next(new ApiError(`No cart found for this user`, 404));
     }
+    //return quantity to product quantity
+    cart.products.forEach(async (item) => {
+        await Product.findByIdAndUpdate(item.product, { $inc: { quantity: item.quantity } });
+    });
 
     res.status(200).json({
         status: 'success',
@@ -214,6 +231,11 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
         if (size) {
             return next(new ApiError(`This product does not have size, do not send size`, 400));
         }
+    }
+    //check quantity in stock
+    const product = await Product.findById(productId);
+    if (product.quantity < quantity) {
+        return next(new ApiError(`Product quantity is not enough`, 400));
     }
 
     // Update quantity
