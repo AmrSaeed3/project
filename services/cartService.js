@@ -74,8 +74,7 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
         );
 
         if (productIndex > -1) {
-            // If product with same size exists, increase quantity and decrement product quantity,
-            await Product.findByIdAndUpdate(productId, { $inc: { quantity: -qty } });
+            // If product with same size exists, increase quantity
             const cartItem = cart.products[productIndex];
             cartItem.quantity += qty;
             cart.products[productIndex] = cartItem;
@@ -92,6 +91,8 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
     calculateTotalCartPrice(cart);
     cart.totalPriceAfterDiscount = cart.totalPrice;
 
+    //decrement product quantity
+    await Product.findByIdAndUpdate(productId, { $inc: { quantity: -qty } });
     await cart.save();
 
     res.status(200).json({
