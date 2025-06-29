@@ -56,7 +56,7 @@ exports.addToCart = asyncHandler(async (req, res, next) => {
             user: req.user.id,
             products: [{
                 product: productId,
-                size: size || null,
+                size: size,
                 price: product.price,
                 quantity: qty
             }],
@@ -158,11 +158,18 @@ exports.removeFromCart = asyncHandler(async (req, res, next) => {
     calculateTotalCartPrice(updatedCart);
     await updatedCart.save();
 
+    let message = 'Product removed from cart';
+    let data= updatedCart
+    if (updatedCart.products.length === 0) {
+        message = 'Cart is now empty';
+        data = null;
+    }
+
     res.status(200).json({
         status: 'success',
         length: updatedCart.products.length,
-        message: 'Product removed from cart',
-        data: updatedCart,
+        message,
+        data,
     });
 });
 
@@ -178,10 +185,17 @@ exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
         return next(new ApiError(`No cart found for this user`, 404));
     }
 
+    let message = 'there is your cart';
+    let data = cart;
+    if (cart.products.length === 0) {
+        message = 'Cart is empty';
+        data = null;
+    }
     res.status(200).json({
         status: 'success',
         results: cart.products.length,
-        data: cart,
+        message,
+        data,
     });
 });
 
@@ -269,12 +283,19 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
 
     await cart.save();
 
+    let message = 'there is your cart';
+    let data = cart;
+    if (cart.products.length === 0) {
+        message = 'Cart is empty';
+        data = null;
+    }
     res.status(200).json({
         status: 'success',
-        length: cart.products.length,
-        message: 'Quantity updated',
-        data: cart,
+        results: cart.products.length,
+        message,
+        data,
     });
+
 });
 
 
@@ -305,9 +326,18 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
 
     await cart.save();
 
+    let message = 'Coupon applied';
+    let data = cart;
+    if (cart.products.length === 0) {
+        message = 'Cart is empty';
+        data = null;
+    }
     res.status(200).json({
         status: 'success',
-        message: 'Coupon applied',
-        data: cart,
+        results: cart.products.length,
+        message,
+        data,
     });
 });
+
+
