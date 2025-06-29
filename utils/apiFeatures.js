@@ -13,11 +13,11 @@ class ApiFeatures {
         const filterQuery = JSON.parse(queryStr);
 
         // Merge filter and search
-        console.log('Final query:', { ...filterQuery, ...(this.searchQuery || {}) });
-        this.mongooseQuery = this.mongooseQuery.find({
-            ...filterQuery,
-            ...(this.searchQuery || {})
-        });
+        const finalQuery = { ...filterQuery, ...(this.searchQuery || {}) };
+        if (this.queryString.keyword || Object.keys(filterQuery).length > 0) {
+            console.log('Final query:', finalQuery);
+        }
+        this.mongooseQuery = this.mongooseQuery.find(finalQuery);
 
         return this;
     }
@@ -43,9 +43,9 @@ class ApiFeatures {
     }
 
     search(modelName) {
-        console.log('search() called with modelName:', modelName, 'and keyword:', this.queryString.keyword);
         this.searchQuery = {};
         if (this.queryString.keyword) {
+            console.log('search() called with modelName:', modelName, 'and keyword:', this.queryString.keyword);
             if (modelName === 'Product') {
                 this.searchQuery = { $text: { $search: this.queryString.keyword } };
             } else {

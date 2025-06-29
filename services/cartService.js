@@ -4,6 +4,7 @@ const Product = require('../models/productModel');
 const User = require('../models/userModel');
 const Coupon = require('../models/couponModel');
 const ApiError = require('../utils/apiError');
+const { addWishlistStatus } = require('./wishlistService');
 
 
 // Calculate total price
@@ -159,7 +160,7 @@ exports.removeFromCart = asyncHandler(async (req, res, next) => {
     await updatedCart.save();
 
     let message = 'Product removed from cart';
-    let data= updatedCart
+    let data = updatedCart
     if (updatedCart.products.length === 0) {
         message = 'Cart is now empty';
         data = null;
@@ -183,6 +184,21 @@ exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
 
     if (!cart) {
         return next(new ApiError(`No cart found for this user`, 404));
+    }
+
+    // Add wishlist status to cart products
+    if (cart.products.length > 0) {
+        const productsWithWishlist = await addWishlistStatus(
+            cart.products.map(item => item.product),
+            req.user.id
+        );
+
+        // Update cart products with wishlist status
+        cart.products.forEach((item, index) => {
+            if (productsWithWishlist[index]) {
+                item.product = productsWithWishlist[index];
+            }
+        });
     }
 
     let message = 'there is your cart';
@@ -283,15 +299,37 @@ exports.updateCartItemQuantity = asyncHandler(async (req, res, next) => {
 
     await cart.save();
 
+    // Populate cart with product details and add wishlist status
+    const populatedCart = await Cart.findOne({ user: req.user.id })
+        .populate({
+            path: 'products.product',
+            select: 'imageCover name price id sizes'
+        });
+
+    // Add wishlist status to cart products
+    if (populatedCart.products.length > 0) {
+        const productsWithWishlist = await addWishlistStatus(
+            populatedCart.products.map(item => item.product),
+            req.user.id
+        );
+
+        // Update cart products with wishlist status
+        populatedCart.products.forEach((item, index) => {
+            if (productsWithWishlist[index]) {
+                item.product = productsWithWishlist[index];
+            }
+        });
+    }
+
     let message = 'there is your cart';
-    let data = cart;
-    if (cart.products.length === 0) {
+    let data = populatedCart;
+    if (populatedCart.products.length === 0) {
         message = 'Cart is empty';
         data = null;
     }
     res.status(200).json({
         status: 'success',
-        results: cart.products.length,
+        results: populatedCart.products.length,
         message,
         data,
     });
@@ -326,15 +364,40 @@ exports.applyCoupon = asyncHandler(async (req, res, next) => {
 
     await cart.save();
 
+    // Populate cart with product details and add wishlist status
+    const populatedCart = await Cart.findOne({ user: req.user.id })
+        .populate({
+            path: 'products.product',
+            select: 'imageCover name price id sizes'
+        });
+
+    // Add wishlist status to cart products
+    if (populatedCart.products.length > 0) {
+        const productsWithWishlist = await addWishlistStatus(
+            populatedCart.products.map(item => item.product),
+            req.user.id
+        );
+
+        // Update cart products with wishlist status
+        populatedCart.products.forEach((item, index) => {
+            if (productsWithWishlist[index]) {
+                item.product = productsWithWishlist[index];
+            }
+        });
+    }
+
+    // Copy the discount price to the populated cart
+    populatedCart.totalPriceAfterDiscount = totalPriceAfterDiscount;
+
     let message = 'Coupon applied';
-    let data = cart;
-    if (cart.products.length === 0) {
+    let data = populatedCart;
+    if (populatedCart.products.length === 0) {
         message = 'Cart is empty';
         data = null;
     }
     res.status(200).json({
         status: 'success',
-        results: cart.products.length,
+        results: populatedCart.products.length,
         message,
         data,
     });
